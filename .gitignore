@@ -23,6 +23,7 @@ url/
 *.last
 *\#*
 *.data
+.emacs-places
 
 # Project files
 ede-projects.el
