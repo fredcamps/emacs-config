@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name : defmeth
+# key: def
+# binding: C-c C-b dm
+# --
+def ${1:name}(self$2):
+    $3

@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: import pdb;pdb.set_trace()
+# key: pdb
+# binding: C-c C-b p
+# --
+import pdb; pdb.set_trace()
