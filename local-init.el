@@ -11,8 +11,7 @@
   "Packages to install.")
 
 (defun init:setup-repository ()
-  ;; Repository channels
-  (setq load-prefer-newer t)
+  "Set repository channels."
   (setq package-enable-at-startup nil)
   (setq package-check-signature nil)
   (setq package-archives
@@ -58,9 +57,16 @@
 ;;; Behaviour settings
 ;; (setq max-lisp-eval-depth 10000)
 ;; (setq max-specpdl-size 10000)
+(setq load-prefer-newer t)
+(electric-pair-mode t)
 (defalias 'yes-or-no-p 'y-or-n-p)
-(setq auto-save-default nil)
-(setq make-backup-files nil)
+(setq-default save-interprogram-paste-before-kill t
+              uniquify-buffer-name-style 'forward
+              require-final-newline t
+              auto-save-default nil
+              make-backup-files nil)
+(save-place-mode 1)
+(setq save-place-file (concat user-emacs-directory ".emacs-places"))
 (setq temporary-file-directory (concat user-emacs-directory "tmp"))
 (delete-selection-mode t)
 (custom-set-variables
@@ -79,16 +85,22 @@
 (setq browse-url-generic-program "firefox")
 ;;;
 
-;;; Indentation Settings
-(electric-pair-mode +1)
+;;; Indentation settings
+(setq-default fill-column 100)
 (electric-indent-mode +1)
+(setq-default js-indent-level 2
+              tab-width 2
+              tab-always-indent 'complete
+              indent-tabs-mode nil)
 ;;;
 
 ;;; Appearance settings
+(setq-default visible-bell t
+              inhibit-splash-screen t
+              inhibit-startup-message t)
 (transient-mark-mode t)
 (menu-bar-mode -1)
-(setq inhibit-splash-screen t)
-(setq inhibit-startup-message t)
+(tool-bar-mode -1)
 (display-time-mode -1)
 (display-battery-mode -1)
 (line-number-mode t)
@@ -96,7 +108,7 @@
 (global-hl-line-mode t)
 (show-paren-mode t)
 (setq show-paren-style 'expression)
-(which-function-mode +1)
+(which-function-mode -1)
 
 (load-theme 'wombat t)
 (custom-set-faces
@@ -108,6 +120,12 @@
 ;;;
 
 ;;; Keybindings settings
+(define-key global-map (kbd "C-x C-b") 'ibuffer)
+(define-key global-map (kbd "C-s") 'isearch-forward-regexp)
+(define-key global-map (kbd "C-r") 'isearch-backward-regexp)
+(define-key global-map (kbd "C-M-s") 'isearch-forward)
+(define-key global-map (kbd "C-M-r") 'isearch-backward)
+(define-key global-map (kbd "M-/") 'hippie-expand)
 (define-key global-map (kbd "RET") 'newline-and-indent)
 (define-key global-map (kbd "C-x t") #'ansi-term)
 (define-key global-map (kbd "M-.") #'xref-find-definitions)
@@ -140,6 +158,14 @@
 (add-hook 'lisp-interaction-mode-hook 'turn-on-eldoc-mode t)
 (add-hook 'ielm-mode-hook 'turn-on-eldoc-mode t)
 ;;;
+
+;;; Indentation hooks
+(add-hook 'make-file-mode-hook '(lambda()
+                                  (setq-local tab-width 4)
+                                  (setq-local indent-tabs-mode t)) nil t)
+(add-hook 'markdown-mode-hook '(lambda() (setq-local tab-width 4)) nil t)
+(add-hook 'sql-mode-hook '(lambda() (setq-local tab-width 4)) nil t)
+;;;
 ;; --- ;;
 
 ;; --- Extensions settings --- ;;
@@ -147,12 +173,13 @@
   :hook elisp-mode-hook
   :demand t
   :ensure t
+  :custom
+  (auto-compile-display-buffer nil)
+  (auto-compile-mode-line-counter t)
+  (auto-compile-source-recreate-deletes-dest t)
+  (auto-compile-toggle-deletes-nonlib-dest t)
+  (auto-compile-update-autoloads t)
   :config
-  (setq auto-compile-display-buffer nil)
-  (setq auto-compile-mode-line-counter t)
-  (setq auto-compile-source-recreate-deletes-dest t)
-  (setq auto-compile-toggle-deletes-nonlib-dest t)
-  (setq auto-compile-update-autoloads t)
   (auto-compile-on-load-mode t)
   (auto-compile-on-save-mode t))
 
@@ -168,31 +195,34 @@
   (add-hook 'after-init-hook 'move-lines-mode))
 
 (use-package ido
-  :commands (ido-everywhere)
+  :commands ido-everywhere
+  :custom
+  (ido-enable-flex-matching t)
+  (ido-create-new-buffer 'prompt)
+  (ido-use-faces nil)
+  (ido-completion-buffer nil)
+  (ido-completion-buffer-all-completions nil)
   :config
-  (setq ido-enable-flex-matching nil)
-  (setq ido-create-new-buffer 'prompt)
-  (setq ido-use-faces nil)
-  (setq ido-completion-buffer nil)
-  (setq ido-completion-buffer-all-completions nil)
   (ido-everywhere t)
   (ido-mode +1))
 
 (use-package flycheck
   :ensure t
+  :no-require t
   :commands flycheck-mode
   :hook (prog-mode . flycheck-mode)
+  :custom
+  (flycheck-indication-mode nil)
+  (flycheck-highlighting-mode 'lines)
+  (flycheck-idle-change-delay 0.5)
+  (flycheck-check-syntax-automatically '(mode-enabled
+                                         save
+                                         idle-change
+                                         new-line
+                                         idle-buffer-switch))
   :init
   (flymake-mode -1)
   :config
-  ;; (setq flycheck-check-syntax-automatically '(mode-enabled
-  ;;                                             save
-  ;;                                             idle-change
-  ;;                                             new-line
-  ;;                                             idle-buffer-switch))
-  (setq flycheck-indication-mode nil)
-  (setq flycheck-highlighting-mode 'lines)
-  (setq flycheck-idle-change-delay 0.5)
   (set-face-attribute 'flycheck-info nil
                       :background nil
                       :foreground "#fff"
@@ -221,6 +251,7 @@
 
 (use-package company-dict
   :ensure t
+  :after company
   :init
   (setq company-dict-dir (concat user-emacs-directory "dict"))
   (setq company-dict-enable-fuzzy nil)
@@ -237,8 +268,8 @@
 
 (use-package yasnippet
   :ensure t
-  :init
-  (add-hook 'prog-mode-hook #'yas-minor-mode)
+  :no-require t
+  :hook (prog-mode . yas-minor-mode)
   :config
   (let ((snippets-dir)
         (yasnippet-snippets-dir))
@@ -251,6 +282,7 @@
 
 (use-package eglot
   :ensure t
+  :no-require t
   :bind (:map eglot-mode-map
               ("C-c b" . eglot-format)
               ("C-c h" . eglot-help-at-point)
@@ -277,10 +309,11 @@
 
 (use-package dumb-jump
   :ensure t
+  :no-require t
   :hook (prog-mode . dumb-jump-mode)
   :bind (:map dumb-jump-mode-map
-              ("C-c ." . dumb-jump-back)
-              ("C-c ;" . dumb-jump-go)
+              ("C-c ;" . dumb-jump-back)
+              ("C-c ." . dumb-jump-go)
               ("C-x 4 ;" . dumb-jump-go-other-window)))
 
 (use-package git-gutter
@@ -289,33 +322,43 @@
   :ensure t)
 
 (use-package magit
-  :ensure t)
+  :ensure t
+  :no-require t
+  :commands transient-define-prefix)
 
 (use-package magit-gitflow
-  :ensure t)
+  :ensure t
+  :no-require t
+  :commands transient-define-prefix)
 
 (use-package loccur
   :ensure t
+  :no-require t
   :bind (:map prog-mode-map
               ("C-c o" . loccur)))
 
 (use-package neotree
   :ensure t
+  :no-require t
   :bind (("C-c e" . neotree-toggle)))
 
 ;;; Rest Client
 (use-package company-restclient
   :hook restclient-mode
+  :no-require t
+  :after company
   :config
   (add-to-list 'company-backends 'company-restclient)
   :ensure t)
 
 (use-package restclient
   :mode "\\.rest$'"
+  :no-require t
   :ensure t)
 
 (use-package skewer-mode
   :ensure t
+  :no-require t
   :requires (simple-httpd)
   :hook ((js2-mode . skewer-mode)
          (css-mode . skewer-css-mode)
@@ -323,24 +366,28 @@
   :config
   (setq httpd-port 54322))
 
-(use-package
-    ag
+(use-package ag
   :ensure t)
 
 (use-package column-enforce-mode
   :ensure t
+  :no-require t
   :hook (prog-mode . column-enforce-mode)
   :config
   (setq column-enforce-column 100))
 
 (use-package indent-guide
+  :no-require t
   :ensure t)
 
 (use-package rainbow-mode
-  :ensure t)
+  :ensure t
+  :no-require t
+  :pin gnu)
 
 (use-package rainbow-delimiters
   :ensure t
+  :no-require t
   :hook (prog-mode . rainbow-delimiters-mode))
 
 (use-package smart-mode-line
@@ -353,10 +400,17 @@
   (setq sml/theme 'smart-mode-line-dark)
   (setq sml/no-confirm-load-theme t)
   (sml/setup))
+
+(use-package xclip
+  :pin gnu
+  :ensure t
+  :config
+  (xclip-mode 1))
 ;; --- ;;
 
 ;; --- My Custom utilities --- ;;
 (use-package utils
+  :no-require t
   :load-path "site-lisp"
   :bind (("C-c SPC" . utils:toggle-invisibles)
          ("C-c k" . utils:kill-all-buffers)
@@ -366,89 +420,96 @@
 ;; --- Programming/Markdown/Serialization Languages Settings --- ;;
 ;;; JSON/Yaml
 (use-package json-mode
+  :no-require t
   :ensure t
   :bind (:map json-mode-map
               ("C-c b" . json-mode-beautify))
   :init
-  (add-hook 'before-save-hook '(lambda () (untabify (point-min) (point-max))) t t)
-  (setq-local indent-tabs-mode nil)
-  (setq-local tab-always-indent 'complete)
-  (setq-local js-indent-level 2))
+  (add-hook 'before-save-hook '(lambda () (untabify (point-min) (point-max))) t t))
 
 (use-package yaml-mode
+  :no-require t
   :ensure t
   :config
-  (add-hook 'before-save-hook '(lambda () (untabify (point-min) (point-max))) nil t)
-  (setq-local indent-tabs-mode nil)
-  (setq-local tab-always-indent 'complete)
-  (setq-local tab-width 2))
+  (add-hook 'before-save-hook '(lambda () (untabify (point-min) (point-max))) nil t))
 ;;;
 
 ;;; Elisp
+(use-package elisp-slime-nav
+  :no-require t
+  :ensure t
+  :hook ((emacs-lisp-mode-hook . elisp-slime-nav-mode)
+         (ielm-mode-hook . elisp-slime-nav-mode)))
+
 (use-package package-lint
+  :no-require t
+  :hook emacs-lisp-mode-hook
   :ensure t)
 
 (use-package elisp-format
+  :no-require t
   :ensure t
   :bind (:map emacs-lisp-mode-map
               ("C-c b" . elisp-format-buffer)))
 
 (use-package elisp-mode
-  :requires (projectile)
+  :no-require t
   :config
-  (add-hook 'before-save-hook '(lambda () (untabify (point-min) (point-max))) nil t)
-  (setq-local indent-tabs-mode nil)
-  (setq-local tab-width 2)
-  (add-to-list 'company-backends '(company-elisp)))
+  (add-hook 'before-save-hook '(lambda () (untabify (point-min) (point-max))) nil t))
 
 ;;; Python
 (use-package virtualenvwrapper
+  :no-require t
+  :hook python-mode-hook
   :ensure t)
 
 (use-package importmagic
   :ensure t
-  :requires (python)
-  :commands (importmagic-fix-imports)
+  :no-require t
+  :commands importmagic-fix-imports
   :bind (:map python-mode-map
               ("C-c C-l" . importmagic-fix-imports)))
 
 (use-package python-black
   :ensure t
-  :requires (python)
+  :no-require t
   :bind (:map python-mode-map
               ("C-c b" . python-black-buffer)))
 
 (use-package pytest
-  :requires (python)
   :ensure t
+  :no-require t
   :bind (:map python-mode-map
               ("C-c C-t" . pytest-pdb-one))
-  :config
-  (setq-local pytest-project-root-files '(".dir-locals.el" "pyproject.toml"))
-  (setq-local pytest-cmd-format-string "cd '%s' ; and %s %s '%s'"))
+  :custom
+  (pytest-project-root-files '(".projectile" "pyproject.toml" ".dir-locals.el"))
+  (pytest-cmd-format-string "cd '%s' ; and %s %s '%s'"))
 
 (use-package elisp-python
   :load-path "site-lisp"
   :after (importmagic projectile utils virtualenvwrapper))
 
 (use-package python
+  :no-require t
+  :commands (python-indent-shift-left python-indent-shift-right)
   :bind (:map python-mode-map
               ("<tab>" . 'python-indent-shift-right)
               ("<backtab>" . 'python-indent-shift-left)
               ("C-c C-e" . 'run-python)
               ("C-c C-d" . 'pdb))
+  :custom
+  (python-indent-offset 4)
+  (python-indent-guess-indent-offset nil)
+  (python-indent-guess-indent-offset-verbose nil)
   :config
   (defalias 'run-python 'python)
-  (add-hook 'before-save-hook '(lambda () (untabify (point-min) (point-max))) nil t)
-  (setq-local indent-tabs-mode nil)
-  (setq python-indent-offset 4)
-  (setq python-indent-guess-indent-offset nil)
-  (setq python-indent-guess-indent-offset-verbose nil))
+  (add-hook 'before-save-hook '(lambda () (untabify (point-min) (point-max))) nil t))
 ;;;
 
 ;;; Javascript/Typescript
 (use-package jest-test-mode
   :ensure t
+  :no-require t
   :bind (:map js2-mode-map
               ("C-c C-t" . jest-test-debug-run-at-point)
          :map typescript-mode-map
@@ -456,13 +517,11 @@
 
 (use-package js2-mode
   :ensure t
+  :no-require t
   :mode ("\\.js$" . js2-mode)
   :interpreter "node"
   :config
-  (add-hook 'before-save-hook '(lambda () (untabify (point-min) (point-max))) t t)
-  (setq-local indent-tabs-mode nil)
-  (setq-local tab-always-indent 'complete)
-  (setq-local js-indent-level 2))
+  (add-hook 'before-save-hook '(lambda () (untabify (point-min) (point-max))) t t))
 
 (use-package js2-jsx-mode
   :after (js2-mode)
@@ -470,48 +529,49 @@
 
 (use-package typescript-mode
   :ensure t
+  :no-require t
   :mode ((("\\.tsx$" . typescript-mode) ("\\.ts$" . typescript-mode)))
+  :custom
+  (typescript-indent-level 4)
   :config
-  (progn
-    (add-hook 'before-save-hook '(lambda () (untabify (point-min) (point-max))) t t)
-    (setq-local indent-tabs-mode nil)
-    (setq-local tab-always-indent 'complete)
-    (setq-local js-indent-level 4)
-    (setq-local tab-width 4)))
+  (add-hook 'before-save-hook '(lambda () (untabify (point-min) (point-max))) t t))
 
 ;;; Bash
 (use-package company-shell
+  :no-require t
+  :after company
   :hook sh-mode
   :config
   (add-to-list 'company-backends 'company-shell))
 
 (use-package sh-script
+  :no-require t
+  :custom
+  (sh-basic-offset 4)
   :config
-  (add-hook 'before-save-hook '(lambda () (untabify (point-min) (point-max))) nil t)
-  (setq-local indent-tabs-mode -1)
-  (setq-local tab-width 4))
+  (add-hook 'before-save-hook '(lambda () (untabify (point-min) (point-max))) nil t))
 
 ;;; C/C++
 (use-package cc-mode
+  :no-require t
+  :custom
+  (c-default-style "linux")
+  (c-basic-offset 4)
+  (c-tab-always-indent t)
   :config
-  (add-hook 'before-save-hook '(lambda () (untabify (point-min) (point-max))) nil t)
-  (setq-local tab-width 4)
-  (setq-local c-basic-offset 4)
-  (setq-local c-default-style "linux")
-  (setq-local tab-always-indent t)
-  (setq-local indent-tabs-mode nil))
+  (add-hook 'before-save-hook '(lambda () (untabify (point-min) (point-max))) nil t))
 ;;;
 
 ;;; Make
 (use-package make-mode
+  :no-require t
   :config
-  (add-hook 'before-save-hook '(lambda () (tabify (point-min) (point-max))) nil t)
-  (setq-local indent-tabs-mode +1)
-  (setq-local tab-width 4))
+  (add-hook 'before-save-hook '(lambda () (tabify (point-min) (point-max))) nil t))
 
 ;;; Markdown
 (use-package markdown-mode
   :ensure t
+  :no-require t
   :commands (markdown-mode gfm-mode)
   :mode (("README\\.md\\'" . gfm-mode)
          ("README\\.rst\\'" . gfm-mode)
@@ -520,85 +580,95 @@
          ("\\.markdown\\'" . markdown-mode))
   :bind (:map markdown-mode-map
               ("C-c C-c l" . markdown-live-preview-mode))
+  :custom
+  (markdown-command "multimarkdown")
   :config
-  (add-hook 'before-save-hook '(lambda () (untabify (point-min) (point-max))) nil t)
-  (setq markdown-command "multimarkdown")
-  (setq-local indent-tabs-mode -1)
-  (setq-local tab-width 4))
+  (add-hook 'before-save-hook '(lambda () (untabify (point-min) (point-max))) nil t))
 ;;;
 
 ;;; Rust
 (use-package rust-mode
   :ensure t
+  :no-require t
+  :custom
+  (rust-indent-offset 4)
   :config
-  (add-hook 'before-save-hook '(lambda () (untabify (point-min) (point-max))) nil t)
-  (setq-local indent-tabs-mode -1)
-  (setq-local tab-width 2))
+  (add-hook 'before-save-hook '(lambda () (untabify (point-min) (point-max))) nil t))
 ;;;
 
 ;;; Ruby
 (use-package ruby-mode
+  :no-require t
+  :custom
+  (ruby-indent-level 2)
+  (ruby-indent-tabs nil)
   :config
-  (add-hook 'before-save-hook '(lambda () (untabify (point-min) (point-max))) nil t)
-  (setq-local indent-tabs-mode -1)
-  (setq-local tab-width 2))
+  (add-hook 'before-save-hook '(lambda () (untabify (point-min) (point-max))) nil t))
 ;;;
 
 ;;; SQL
 (use-package sql
+  :no-require t
   :config
-  (add-hook 'before-save-hook '(lambda () (untabify (point-min) (point-max))) nil t)
-  (setq-local indent-tabs-mode -1)
-  (setq-local tab-width 4))
+  (add-hook 'before-save-hook '(lambda () (untabify (point-min) (point-max))) nil t))
 ;;;
 
 ;;; Assembly x86
 (use-package nasm-mode
-  :ensure t)
+  :ensure t
+  :custom
+  (nasm-basic-offset 4)
+  :no-require t)
 ;;;
 
 ;;; Terraform
 (use-package company-terraform
   :ensure t
+  :no-require t
   :after company
   :config
   (company-terraform-init))
 
 (use-package terraform-mode
   :ensure t
+  :no-require t
+  :custom
+  (terraform-indent-level 2)
   :config
-  (add-hook 'before-save-hook '(lambda () (untabify (point-min) (point-max))) nil t)
-  (setq-local indent-tabs-mode -1)
-  (setq-local tab-width 2))
+  (add-hook 'before-save-hook '(lambda () (untabify (point-min) (point-max))) nil t))
 ;;;
 
 ;;; Web
 (use-package web-mode
   :ensure t
+  :no-require t
+  :mode (("\\.css?\\'" . web-mode)
+         ("\\.html?\\'" . web-mode)
+         ("\\.djhtml\\'" . web-mode)
+         ("\\.jinja2\\'" . web-mode))
+  :custom
+  (web-mode-markup-indent-offset 2)
+  (web-mode-css-indent-offset 2)
+  (web-mode-code-indent-offset 2)
+  (web-mode-enable-auto-pairing t)
+  (web-mode-enable-auto-closing t)
+  (web-mode-enable-current-element-highlight t)
+  (web-mode-enable-current-column-highlight nil)
   :config
-  (add-hook 'before-save-hook '(lambda () (untabify (point-min) (point-max))) nil t)
-  (setq-local indent-tabs-mode -1)
-  (setq-local tab-width 2)
-  (setq-local web-mode-markup-indent-offset 2)
-  (setq-local web-mode-css-indent-offset 2)
-  (setq-local web-mode-code-indent-offset 2)
-  (setq-local web-mode-enable-auto-pairing t)
-  (setq-local web-mode-enable-auto-closing t)
-  (setq-local web-mode-enable-current-element-highlight t)
-  (setq-local web-mode-enable-current-column-highlight -1)
-  (add-to-list 'auto-mode-alist '("\\.html?\\'" . web-mode))
-  (add-to-list 'auto-mode-alist '("\\.djhtml\\'" . web-mode))
-  (add-to-list 'auto-mode-alist '("\\.jinja2\\'" . web-mode)))
+  (add-hook 'before-save-hook '(lambda () (untabify (point-min) (point-max))) nil t))
 ;;;
 
 ;;; Dockerfile
 (use-package dockerfile-mode
-  :ensure t)
+  :ensure t
+  :no-require t)
 ;;;
 
 ;;; Latex
 (use-package company-math
   :ensure t
+  :no-require t
+  :after company
   :hook ((tex-mode . company-math-mode)
          (TeX-mode . company-math-mode))
   :config
@@ -606,7 +676,11 @@
                                           company-latex-commands)) company-backends)))
 
 (use-package latex-preview-pane
-  :ensure t)
+  :ensure t
+  :no-require t)
 ;;;
 
 ;; --- ;;
+
+(provide 'local-init)
+;;; local-init ends here
