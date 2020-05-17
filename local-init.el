@@ -169,6 +169,12 @@
 ;; --- ;;
 
 ;; --- Extensions settings --- ;;
+(use-package protbuf
+  :load-path "3rd-party"
+  :commands protect-buffer-from-kill-mode
+  :config
+  (protect-buffer-from-kill-mode nil (get-buffer "*scratch*")))
+
 (use-package auto-compile
   :hook elisp-mode-hook
   :demand t
