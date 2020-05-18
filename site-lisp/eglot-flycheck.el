@@ -6,22 +6,20 @@
   nil)
 
 (defun flycheck-eglot-report-fn (diags &rest _)
-  (setq flycheck-eglot-current-errors (mapcar (lambda (diag)
-                                                (save-excursion (goto-char (flymake--diag-beg diag))
-                                                                (flycheck-error-new-at
-                                                                 (line-number-at-pos)
-                                                                 (1+ (- (point)
-                                                                        (line-beginning-position)))
-                                                                 (pcase (flymake--diag-type diag)
-                                                                   ('eglot-error 'error)
-                                                                   ('eglot-warning 'warning)
-                                                                   ('eglot-note 'info)
-                                                                   (_
-                                                                    (error
-                                                                     "Unknown diag type, %S"
-                                                                     diag)))
-                                                                 (flymake--diag-text diag)
-                                                                 :checker 'eglot))) diags))
+  (setq flycheck-eglot-current-errors
+        (mapcar (lambda (diag)
+                  (save-excursion (goto-char (flymake--diag-beg diag))
+                                  (flycheck-error-new-at
+                                   (line-number-at-pos)
+                                   (1+ (- (point)
+                                          (line-beginning-position)))
+                                   (pcase (flymake--diag-type diag)
+                                     ('eglot-error 'error)
+                                     ('eglot-warning 'warning)
+                                     ('eglot-note 'info)
+                                     (_ (error "Unknown diag type, %S" diag)))
+                                   (flymake--diag-text diag)
+                                   :checker 'eglot))) diags))
   (flycheck-buffer))
 
 (defun flycheck-eglot--start (checker callback)
