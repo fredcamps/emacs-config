@@ -40,6 +40,10 @@
 ;(setq message-log-max 1000)
 ;;;
 
+;;; Perfomance
+(setq gc-cons-threshold 100000000)
+;;;
+
 ;;; Encoding
 (setq locale-coding-system 'utf-8)
 (set-terminal-coding-system 'utf-8-unix)
@@ -55,8 +59,8 @@
 ;;;
 
 ;;; Behaviour settings
-;; (setq max-lisp-eval-depth 10000)
-;; (setq max-specpdl-size 10000)
+;(setq max-lisp-eval-depth 10000)
+;(setq max-specpdl-size 10000)
 (setq load-prefer-newer t)
 (electric-pair-mode t)
 (defalias 'yes-or-no-p 'y-or-n-p)
@@ -109,14 +113,17 @@
 (show-paren-mode t)
 (setq show-paren-style 'expression)
 (which-function-mode -1)
+(defun bootstrap-theme ()
+  "Function that load theme and set custom faces."
+  (load-theme 'wombat t)
+  (custom-set-faces
+   `(region ((t (:background, "#919199"))))
+   `(hl-line ((t (:background, "#424242"))))
+   `(show-paren-match ((t (:background, "#6a6a6b"))))
+   `(show-paren-match ((t (:background, "#6a6a6b"))))
+   `(which-func ((t (:foreground, "gray"))))))
 
-(load-theme 'wombat t)
-(custom-set-faces
- `(region ((t (:background, "#919199"))))
- `(hl-line ((t (:background, "#424242"))))
- `(show-paren-match ((t (:background, "#6a6a6b"))))
- `(show-paren-match ((t (:background, "#6a6a6b"))))
- `(which-func ((t (:foreground, "gray")))))
+(add-hook 'after-init-hook 'bootstrap-theme)
 ;;;
 
 ;;; Keybindings settings
@@ -159,6 +166,11 @@
 (add-hook 'ielm-mode-hook 'turn-on-eldoc-mode t)
 ;;;
 
+;;; Perfomance hooks
+(add-hook 'minibuffer-setup-hook #'(lambda() (setq gc-cons-threshold most-positive-fixnum)))
+(add-hook 'minibuffer-exit-hook #'(lambda() (setq gc-cons-threshold 800000)))
+;;;
+
 ;;; Indentation hooks
 (add-hook 'make-file-mode-hook '(lambda()
                                   (setq-local tab-width 4)
@@ -169,6 +181,13 @@
 ;; --- ;;
 
 ;; --- Extensions settings --- ;;
+(use-package esup
+  :ensure t
+  :no-require t
+  :commands (esup)
+  :config
+  (setenv "TERM" "xterm-256color"))
+
 (use-package protbuf
   :load-path "3rd-party"
   :commands protect-buffer-from-kill-mode
@@ -191,11 +210,13 @@
 
 (use-package redo+
   :load-path "3rd-party"
+  :no-require t
   :bind (("C-x u" . undo-only)
          ("C-x U" . redo)))
 
 (use-package move-lines
   :load-path "3rd-party"
+  :no-require t
   :commands move-lines-mode
   :init
   (add-hook 'after-init-hook 'move-lines-mode))
@@ -215,8 +236,8 @@
 (use-package flycheck
   :ensure t
   :no-require t
+  :defer t
   :commands flycheck-mode
-  :hook (prog-mode . flycheck-mode)
   :custom
   (flycheck-indication-mode nil)
   (flycheck-highlighting-mode 'lines)
@@ -227,6 +248,7 @@
                                          new-line
                                          idle-buffer-switch))
   :init
+  (add-hook 'prog-mode-hook 'flycheck-mode)
   (flymake-mode -1)
   :config
   (set-face-attribute 'flycheck-info nil
@@ -266,16 +288,23 @@
 
 (use-package projectile
   :ensure t
+  :after (smart-mode-line)
+  :custom
+  (projectile-enable-caching t)
+  (projectile-dynamic-mode-line t)
+  (projectile-require-project-root 't)
+  (projectile-completion-system 'ido)
   :config
+  (projectile-mode t)
   (define-key projectile-mode-map (kbd "C-c p") 'projectile-switch-project)
-  (define-key projectile-mode-map (kbd "C-c C-f") 'projectile-find-file)
-  (setq projectile-require-project-root 't)
-  (setq projectile-completion-system 'ido))
+  (define-key projectile-mode-map (kbd "C-c C-f") 'projectile-find-file))
 
 (use-package yasnippet
   :ensure t
   :no-require t
-  :hook (prog-mode . yas-minor-mode)
+  :defer t
+  :init
+  (add-hook 'prog-mode-hook 'yas-minor-mode)
   :config
   (let ((snippets-dir)
         (yasnippet-snippets-dir))
@@ -284,6 +313,7 @@
 
 (use-package yasnippet-snippets
   :ensure t
+  :defer t
   :after yasnippet)
 
 (use-package eglot
@@ -296,8 +326,7 @@
   :config
   (add-to-list 'eglot-server-programs '((c++-mode c-mode) "clangd-9"))
   (add-to-list 'eglot-server-programs
-               '((js2-mode typescript-mode))
-               "typescript-language-server" "stdio")
+               '((js2-mode typescript-mode) . ("typescript-language-server" "--stdio")))
   (add-hook 'typescript-mode-hook 'eglot-ensure)
   (add-hook 'js2-mode-hook 'eglot-ensure)
   (add-hook 'js2-jsx-mode-hook 'eglot-ensure)
@@ -313,16 +342,8 @@
   :after eglot
   :load-path "site-lisp")
 
-(use-package dumb-jump
-  :ensure t
-  :no-require t
-  :hook (prog-mode . dumb-jump-mode)
-  :bind (:map dumb-jump-mode-map
-              ("C-c ;" . dumb-jump-back)
-              ("C-c ." . dumb-jump-go)
-              ("C-x 4 ;" . dumb-jump-go-other-window)))
-
 (use-package git-gutter
+  :defer t
   :config
   (global-git-gutter-mode +1)
   :ensure t)
@@ -330,12 +351,11 @@
 (use-package magit
   :ensure t
   :no-require t
-  :commands transient-define-prefix)
+  :defer t)
 
 (use-package magit-gitflow
   :ensure t
-  :no-require t
-  :commands transient-define-prefix)
+  :no-require t)
 
 (use-package loccur
   :ensure t
@@ -343,10 +363,10 @@
   :bind (:map prog-mode-map
               ("C-c o" . loccur)))
 
-(use-package neotree
-  :ensure t
-  :no-require t
-  :bind (("C-c e" . neotree-toggle)))
+;; (use-package neotree
+;;   :ensure t
+;;   :no-require t
+;;   :bind (("C-c e" . neotree-toggle)))
 
 ;;; Rest Client
 (use-package company-restclient
@@ -372,8 +392,8 @@
   :config
   (setq httpd-port 54322))
 
-(use-package ag
-  :ensure t)
+;; (use-package ag
+;;   :ensure t)
 
 (use-package column-enforce-mode
   :ensure t
@@ -384,32 +404,38 @@
 
 (use-package indent-guide
   :no-require t
+  :defer t
   :ensure t)
 
 (use-package rainbow-mode
   :ensure t
   :no-require t
+  :defer t
   :pin gnu)
 
 (use-package rainbow-delimiters
   :ensure t
-  :no-require t
-  :hook (prog-mode . rainbow-delimiters-mode))
+  :defer t
+  :init
+  (add-hook 'prog-mode-hook 'rainbow-delimiters-mode))
 
 (use-package smart-mode-line
   :ensure t
+  :no-require t
+  :custom
+  (sml/shorten-modes t)
+  (sml/mode-width 'full)
+  (sml/shorten-directory nil)
+  (sml/show-client t)
+  (sml/theme 'smart-mode-line-dark)
+  (sml/no-confirm-load-theme t)
   :config
-  (setq sml/shorten-modes t)
-  (setq sml/mode-width 'full)
-  (setq sml/shorten-directory nil)
-  (setq sml/show-client t)
-  (setq sml/theme 'smart-mode-line-dark)
-  (setq sml/no-confirm-load-theme t)
   (sml/setup))
 
 (use-package xclip
   :pin gnu
   :ensure t
+  :defer t
   :config
   (xclip-mode 1))
 ;; --- ;;
@@ -436,6 +462,7 @@
 (use-package yaml-mode
   :no-require t
   :ensure t
+  :defer t
   :config
   (add-hook 'before-save-hook '(lambda () (untabify (point-min) (point-max))) nil t))
 ;;;
@@ -523,8 +550,8 @@
 
 (use-package js2-mode
   :ensure t
-  :no-require t
   :mode ("\\.js$" . js2-mode)
+  :no-require t
   :interpreter "node"
   :config
   (add-hook 'before-save-hook '(lambda () (untabify (point-min) (point-max))) t t))
@@ -552,6 +579,7 @@
 
 (use-package sh-script
   :no-require t
+  :defer t
   :custom
   (sh-basic-offset 4)
   :config
@@ -560,6 +588,7 @@
 ;;; C/C++
 (use-package cc-mode
   :no-require t
+  :defer t
   :custom
   (c-default-style "linux")
   (c-basic-offset 4)
@@ -595,6 +624,7 @@
 ;;; Rust
 (use-package rust-mode
   :ensure t
+  :defer t
   :no-require t
   :custom
   (rust-indent-offset 4)
@@ -605,6 +635,7 @@
 ;;; Ruby
 (use-package ruby-mode
   :no-require t
+  :defer t
   :custom
   (ruby-indent-level 2)
   (ruby-indent-tabs nil)
@@ -615,6 +646,7 @@
 ;;; SQL
 (use-package sql
   :no-require t
+  :defer t
   :config
   (add-hook 'before-save-hook '(lambda () (untabify (point-min) (point-max))) nil t))
 ;;;
@@ -622,14 +654,16 @@
 ;;; Assembly x86
 (use-package nasm-mode
   :ensure t
+  :defer t
+  :no-require t
   :custom
-  (nasm-basic-offset 4)
-  :no-require t)
+  (nasm-basic-offset 4))
 ;;;
 
 ;;; Terraform
 (use-package company-terraform
   :ensure t
+  :defer t
   :no-require t
   :after company
   :config
@@ -638,6 +672,7 @@
 (use-package terraform-mode
   :ensure t
   :no-require t
+  :defer t
   :custom
   (terraform-indent-level 2)
   :config
@@ -667,6 +702,7 @@
 ;;; Dockerfile
 (use-package dockerfile-mode
   :ensure t
+  :defer t
   :no-require t)
 ;;;
 
@@ -683,6 +719,7 @@
 
 (use-package latex-preview-pane
   :ensure t
+  :defer t
   :no-require t)
 ;;;
 
