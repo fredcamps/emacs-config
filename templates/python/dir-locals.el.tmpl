@@ -1,3 +1,2 @@
 ; -*- mode: Lisp -*-
-((python-mode
-  (python:virtualenv-name . "{{ VENV-NAME }}")))
+((python-mode . ((eval . (venv-workon "{{ VENV-NAME }}")))))
