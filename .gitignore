@@ -24,6 +24,7 @@ url/
 *\#*
 *.data
 .emacs-places
+projectile.cache
 
 # Project files
 ede-projects.el
