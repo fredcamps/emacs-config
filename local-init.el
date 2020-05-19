@@ -62,6 +62,7 @@
 ;;; Behaviour settings
 ;(setq max-lisp-eval-depth 10000)
 ;(setq max-specpdl-size 10000)
+(setq visible-bell t)
 (setq load-prefer-newer t)
 (electric-pair-mode t)
 (defalias 'yes-or-no-p 'y-or-n-p)
