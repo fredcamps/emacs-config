@@ -21,15 +21,23 @@
            "https://raw.githubusercontent.com/d12frosted/elpa-mirror/master/org/")
           ("gnu" .
            "https://raw.githubusercontent.com/d12frosted/elpa-mirror/master/gnu/")))
-  (package-refresh-contents)
+  (package-refresh-contents))
 
-  ;; install missing packages
+(defun init:install-missing-package ()
+  "Install missing packages."
+  (init:setup-repository)
   (dolist (pkg packages-to-install)
     (package-install pkg)))
 
+(defun install-el-package ()
+  "Install an arbitrary package from repository."
+  (interactive)
+  (init:setup-repository)
+  (call-interactively #'package-install))
+
 (eval-when-compile
   (unless (require 'use-package nil 'noerror)
-    (init:setup-repository)
+    (init:install-missing-packages)
     (require 'use-package))
   (setq use-package-always-ensure nil))
 
@@ -62,8 +70,9 @@
 ;;; Behaviour settings
 ;(setq max-lisp-eval-depth 10000)
 ;(setq max-specpdl-size 10000)
-(setq visible-bell t)
+;;(setq visible-bell t)
 (setq load-prefer-newer t)
+
 (electric-pair-mode t)
 (defalias 'yes-or-no-p 'y-or-n-p)
 (setq-default save-interprogram-paste-before-kill t
@@ -88,7 +97,7 @@
 ;;;
 
 ;;; Misc settings
-(setq eldoc-idle-delay 1)
+(setq eldoc-idle-delay 2)
 (setq browse-url-generic-program "firefox")
 ;;;
 
@@ -114,18 +123,8 @@
 (global-hl-line-mode t)
 (show-paren-mode t)
 (setq show-paren-style 'expression)
+(setq show-paren-priority -1)
 (which-function-mode -1)
-(defun bootstrap-theme ()
-  "Function that load theme and set custom faces."
-  (load-theme 'wombat t)
-  (custom-set-faces
-   `(region ((t (:background, "#919199"))))
-   `(hl-line ((t (:background, "#424242"))))
-   `(show-paren-match ((t (:background, "#6a6a6b"))))
-   `(show-paren-match ((t (:background, "#6a6a6b"))))
-   `(which-func ((t (:foreground, "gray"))))))
-
-(add-hook 'after-init-hook 'bootstrap-theme)
 ;;;
 
 ;;; Keybindings settings
@@ -247,7 +246,7 @@
   :custom
   (flycheck-indication-mode nil)
   (flycheck-highlighting-mode 'lines)
-  (flycheck-idle-change-delay 0.5)
+  (flycheck-idle-change-delay 2)
   (flycheck-check-syntax-automatically '(mode-enabled
                                          save
                                          idle-change
@@ -313,6 +312,7 @@
   (define-key projectile-mode-map (kbd "C-c C-f") 'projectile-find-file))
 ;;;
 
+;;; Snippets support
 (use-package yasnippet
   :ensure t
   :no-require t
@@ -326,12 +326,15 @@
     (setq yas-snippet-dirs (list snippets-dir))))
 
 (use-package yasnippet-snippets
+  :no-require t
   :ensure t
   :defer t
   :after yasnippet)
+;;;
 
+;;; git support
 (use-package git-gutter
-  :defer t
+  :no-require t
   :config
   (global-git-gutter-mode +1)
   :ensure t)
@@ -345,6 +348,7 @@
   :ensure t
   :defer t
   :no-require t)
+;;;
 
 (use-package loccur
   :ensure t
@@ -405,25 +409,58 @@
   :init
   (add-hook 'prog-mode-hook 'rainbow-delimiters-mode))
 
-(use-package smart-mode-line
+;;; Doom-mode
+(use-package doom-modeline
   :ensure t
-  :no-require t
-  :custom
-  (sml/shorten-modes t)
-  (sml/mode-width 'full)
-  (sml/shorten-directory nil)
-  (sml/show-client t)
-  (sml/theme 'smart-mode-line-dark)
-  (sml/no-confirm-load-theme t)
+  :init (doom-modeline-mode 1)
   :config
-  (sml/setup))
+  (setq doom-modeline-project-detection 'projectile)
+  (setq doom-modeline-window-width-limit fill-column)
+  (setq doom-modeline-icon (display-graphic-p))
+  (setq doom-modeline-buffer-encoding t)
+  (setq doom-modeline-indent-info t)
+  (setq doom-modeline-checker-simple-format t)
+  (setq doom-modeline-vcs-max-length 12)
+  (setq doom-modeline-modal-icon t)
+  (setq doom-modeline-env-enable-ruby t)
+  (setq doom-modeline-env-enable-perl t)
+  (setq doom-modeline-env-enable-go t)
+  (setq doom-modeline-env-enable-elixir t)
+  (setq doom-modeline-env-enable-rust t)
+  (setq doom-modeline-env-load-string "..."))
+
+(use-package doom-themes
+  :ensure t
+  :config
+  ;; Global settings (defaults)
+  (setq doom-themes-enable-bold t    ;; if nil, bold is universally disabled
+        doom-themes-enable-italic t) ;; if nil, italics is universally disabled
+
+  ;; Enable flashing mode-line on errors
+  (doom-themes-visual-bell-config)
+
+  ;; Treemacs theme
+  (setq doom-themes-treemacs-theme "doom-colors") ;; use the colorful treemacs theme
+  (doom-themes-treemacs-config)
+
+  ;; Corrects (and improves) org-mode's native fontification.
+  (doom-themes-org-config)
+
+  (load-theme 'doom-tomorrow-night t)
+  (set-face-attribute 'region nil :foreground "#01F" :background "#182566")
+  (set-face-attribute 'hl-line nil :background "#141414" :bold t)
+  (set-face-attribute 'show-paren-match nil :foreground "#0F0" :background "#000" :bold t)
+  (set-face-attribute 'show-paren-match-expression nil
+                      :foreground "#0F0"
+                      :background "#000" :bold t)
+  (set-face-attribute 'show-paren-mismatch nil :foreground "red" :foreground "#000"))
 
 (use-package xclip
-  :pin gnu
   :ensure t
+  :pin gnu
   :defer t
-  :config
-  (xclip-mode 1))
+  :no-require t
+  :init)
 
 ;;; Language server protocol
 (use-package lsp-mode
@@ -487,7 +524,6 @@
         company-lsp-async t
         company-lsp-cache-candidates nil))
 ;;;
-
 ;; --- ;;
 
 ;; --- My Custom utilities --- ;;
@@ -705,14 +741,25 @@
 ;;;
 
 ;;; Rust
+;; (use-package flycheck-rust
+;;   :ensure t
+;;   :no-require t
+;;   :init
+;;   (add-hook 'flycheck-mode-hook #'flycheck-rust-setup))
+
 (use-package rust-mode
   :ensure t
   :no-require t
-  :hook lsp
+  :hook (rust-mode . (lambda () (lsp)))
   :custom
   (rust-indent-offset 4)
   :config
-  (add-hook 'before-save-hook '(lambda () (untabify (point-min) (point-max))) nil t))
+  (add-hook 'before-save-hook '(lambda () (untabify (point-min) (point-max))) nil t)
+  (with-eval-after-load "lsp-ui"
+    (setq lsp-ui-flycheck-enable t))
+  (with-eval-after-load "lsp-rust"
+    (setq lsp-rust-server 'rust-analyzer)
+    (setq-local lsp-rust-all-features t)))
 ;;;
 
 ;;; Ruby
