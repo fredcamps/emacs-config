@@ -45,6 +45,7 @@
 ;;;
 
 ;;; Encoding
+(set-language-environment 'utf-8)
 (setq locale-coding-system 'utf-8)
 (set-terminal-coding-system 'utf-8-unix)
 (set-keyboard-coding-system 'utf-8)
@@ -86,6 +87,7 @@
 ;;;
 
 ;;; Misc settings
+(setq eldoc-idle-delay 1)
 (setq browse-url-generic-program "firefox")
 ;;;
 
@@ -99,8 +101,7 @@
 ;;;
 
 ;;; Appearance settings
-(setq-default visible-bell t
-              inhibit-splash-screen t
+(setq-default inhibit-splash-screen t
               inhibit-startup-message t)
 (transient-mark-mode t)
 (menu-bar-mode -1)
@@ -181,12 +182,17 @@
 ;; --- ;;
 
 ;; --- Extensions settings --- ;;
-(use-package esup
+;; (use-package esup
+;;   :ensure t
+;;   :no-require t
+;;   :commands (esup)
+;;   :config
+;;   (setenv "TERM" "screen-256color"))
+
+(use-package epc
   :ensure t
   :no-require t
-  :commands (esup)
-  :config
-  (setenv "TERM" "xterm-256color"))
+  :defer t)
 
 (use-package protbuf
   :load-path "3rd-party"
@@ -237,7 +243,6 @@
   :ensure t
   :no-require t
   :defer t
-  :commands flycheck-mode
   :custom
   (flycheck-indication-mode nil)
   (flycheck-highlighting-mode 'lines)
@@ -264,27 +269,34 @@
                       :foreground "#dc322f"
                       :underline t))
 
+;;; Company
 (use-package company
   :ensure t
+  :no-require t
+  :defer t
   :init
   (global-company-mode)
+  :custom
+  (company-idle-delay 0.5)
+  (company-transformers nil)
+  (company-minimum-prefix-length 3)
   :config
   (bind-key "C-c c" 'company-capf)
   (bind-key "C-c d" 'company-show-doc-buffer)
   (bind-key "C-c v" 'company-show-location)
   (when (fboundp 'global-auto-complete-mode)
-    (global-auto-complete-mode -1))
-  (setq company-idle-delay 0.3)
-  (setq company-minimum-prefix-length 3))
+    (global-auto-complete-mode -1)))
 
 (use-package company-dict
   :ensure t
-  :after company
+  :no-require t
+  :custom
+  (company-dict-enable-fuzzy nil)
+  (company-dict-enable-yasnippet +1)
   :init
-  (setq company-dict-dir (concat user-emacs-directory "dict"))
-  (setq company-dict-enable-fuzzy nil)
-  (setq company-dict-enable-yasnippet +1)
+  (setq-local company-dict-dir (concat user-emacs-directory "dict"))
   (add-to-list 'company-backends 'company-dict))
+;;;
 
 (use-package projectile
   :ensure t
@@ -298,6 +310,7 @@
   (projectile-mode t)
   (define-key projectile-mode-map (kbd "C-c p") 'projectile-switch-project)
   (define-key projectile-mode-map (kbd "C-c C-f") 'projectile-find-file))
+;;;
 
 (use-package yasnippet
   :ensure t
@@ -316,32 +329,6 @@
   :defer t
   :after yasnippet)
 
-(use-package eglot
-  :ensure t
-  :no-require t
-  :bind (:map eglot-mode-map
-              ("C-c b" . eglot-format)
-              ("C-c h" . eglot-help-at-point)
-              ("M-." . eglot-find-definitions))
-  :config
-  (add-to-list 'eglot-server-programs '((c++-mode c-mode) "clangd-9"))
-  (add-to-list 'eglot-server-programs
-               '((js2-mode typescript-mode) . ("typescript-language-server" "--stdio")))
-  (add-hook 'typescript-mode-hook 'eglot-ensure)
-  (add-hook 'js2-mode-hook 'eglot-ensure)
-  (add-hook 'js2-jsx-mode-hook 'eglot-ensure)
-  (add-hook 'c-mode-hook 'eglot-ensure)
-  (add-hook 'c++-mode-hook 'eglot-ensure)
-  (add-hook 'typescript-mode-hook 'eglot-ensure))
-
-(use-package eglot-flycheck
-  :after (eglot flycheck)
-  :load-path "site-lisp")
-
-(use-package eglot-mspyls
-  :after eglot
-  :load-path "site-lisp")
-
 (use-package git-gutter
   :defer t
   :config
@@ -355,6 +342,7 @@
 
 (use-package magit-gitflow
   :ensure t
+  :defer t
   :no-require t)
 
 (use-package loccur
@@ -362,11 +350,6 @@
   :no-require t
   :bind (:map prog-mode-map
               ("C-c o" . loccur)))
-
-;; (use-package neotree
-;;   :ensure t
-;;   :no-require t
-;;   :bind (("C-c e" . neotree-toggle)))
 
 ;;; Rest Client
 (use-package company-restclient
@@ -381,6 +364,7 @@
   :mode "\\.rest$'"
   :no-require t
   :ensure t)
+;;;
 
 (use-package skewer-mode
   :ensure t
@@ -389,8 +373,8 @@
   :hook ((js2-mode . skewer-mode)
          (css-mode . skewer-css-mode)
          (html-mode . skewer-html-mode))
-  :config
-  (setq httpd-port 54322))
+  :custom
+  (httpd-port 54322))
 
 ;; (use-package ag
 ;;   :ensure t)
@@ -399,8 +383,8 @@
   :ensure t
   :no-require t
   :hook (prog-mode . column-enforce-mode)
-  :config
-  (setq column-enforce-column 100))
+  :custom
+  (column-enforce-column 100))
 
 (use-package indent-guide
   :no-require t
@@ -415,6 +399,7 @@
 
 (use-package rainbow-delimiters
   :ensure t
+  :no-require t
   :defer t
   :init
   (add-hook 'prog-mode-hook 'rainbow-delimiters-mode))
@@ -438,6 +423,70 @@
   :defer t
   :config
   (xclip-mode 1))
+
+;;; Language server protocol
+(use-package lsp-mode
+  :ensure t
+  :no-require t
+  :commands (lsp-find-definition)
+  :custom
+  (lsp-idle-delay 1)
+  (lsp-inhibit-lsp-hooks t)
+  (lsp-disabled-clients '(lsp-pyls))
+  (lsp-auto-configure -1)
+  (lsp-eldoc-render-all t)
+  (lsp-log-io nil)
+  (lsp-enable-folding nil)
+  (lsp-print-performance t)
+  (lsp-enable-indentation t)
+  (lsp-enable-xref t)
+  (lsp-enable-snippet t)
+  (lsp-keep-workspace-alive nil)
+  (lsp-enable-completion-at-point -1)
+  (lsp-enable-on-type-formatting t)
+  (lsp-diagnostic-package :flycheck)
+  (lsp-restart 'auto-restart)
+  ;; (lsp-auto-guess-root t)
+  :init
+  (eldoc-mode)
+  :config
+  (define-key lsp-mode-map (kbd "M-.") #'lsp-find-definition)
+  (define-key lsp-mode-map (kbd "M-,") #'xref-pop-marker-stack)
+  (define-key lsp-mode-map (kbd "C-c ,") #'xref-pop-marker-stack)
+  (define-key lsp-mode-map (kbd "C-x 4 .") #'xref-find-definitions-other-window)
+  (flycheck-mode +1))
+
+(use-package lsp-ui
+  :ensure t
+  :no-require t
+  :commands (lsp-ui-sideline-enable
+             lsp-ui-peek-enable
+             lsp-ui-doc-enable
+             lsp-ui-flycheck-enable
+             lsp-ui-imenu-enable)
+  :custom
+  (lsp-ui-doc-enable nil)
+  (lsp-ui-sideline-enable nil)
+  (lsp-ui-sideline-ignore-duplicate -1)
+  (lsp-ui-flycheck-enable t)
+  (lsp-ui-flycheck-live-reporting nil)
+  (lsp-ui-flycheck-list-position 'bottom)
+  (lsp-ui-peek-enable nil)
+  (lsp-ui-peek-show-directory nil)
+  (lsp-ui-imenu-enable nil))
+
+(use-package company-lsp
+  :ensure t
+  :no-require t
+  :defer t
+  :config
+  (add-to-list 'company-backends 'company-lsp)
+  (setq company-lsp-enable-snippet t
+        company-lsp-enable-recompletion t
+        company-lsp-async t
+        company-lsp-cache-candidates nil))
+;;;
+
 ;; --- ;;
 
 ;; --- My Custom utilities --- ;;
@@ -493,7 +542,7 @@
 ;;; Python
 (use-package virtualenvwrapper
   :no-require t
-  :hook python-mode-hook
+  :defer t
   :ensure t)
 
 (use-package importmagic
@@ -518,25 +567,42 @@
   (pytest-project-root-files '(".projectile" "pyproject.toml" ".dir-locals.el"))
   (pytest-cmd-format-string "cd '%s' ; and %s %s '%s'"))
 
-(use-package elisp-python
-  :load-path "site-lisp"
-  :after (importmagic projectile utils virtualenvwrapper))
-
 (use-package python
   :no-require t
   :commands (python-indent-shift-left python-indent-shift-right)
   :bind (:map python-mode-map
               ("<tab>" . 'python-indent-shift-right)
               ("<backtab>" . 'python-indent-shift-left)
-              ("C-c C-e" . 'run-python)
-              ("C-c C-d" . 'pdb))
+              ("C-c C-p" . 'run-python))
   :custom
   (python-indent-offset 4)
   (python-indent-guess-indent-offset nil)
   (python-indent-guess-indent-offset-verbose nil)
+  :init
+  (when (executable-find "ipython")
+    (setq-local python-shell-interpreter "ipython")
+    (setq-local python-shell-interpreter-args "-i --simple-prompt"))
   :config
   (defalias 'run-python 'python)
   (add-hook 'before-save-hook '(lambda () (untabify (point-min) (point-max))) nil t))
+
+(use-package lsp-python-ms
+  :ensure t
+  :no-require t
+  :defer t
+  :custom
+  (lsp-python-ms-disabled [])
+  (lsp-python-ms-python-executable-cmd "python")
+  (lsp-python-ms-cache "System")
+  (lsp-python-ms-executable
+   "/opt/pyls/output/bin/Release/Microsoft.Python.LanguageServer"))
+
+(use-package elisp-python
+  :load-path "site-lisp"
+  :no-require t
+  :commands python:bootstrap
+  :hook ((python-mode . python:bootstrap)
+         (after-hack-local-variables . (lambda () (lsp 1)))))
 ;;;
 
 ;;; Javascript/Typescript
@@ -550,24 +616,34 @@
 
 (use-package js2-mode
   :ensure t
-  :mode ("\\.js$" . js2-mode)
   :no-require t
+  :mode ("\\.js$" . js2-mode)
   :interpreter "node"
+  :hook lsp
   :config
+  (with-eval-after-load "flycheck"
+    (add-to-list 'flycheck-disabled-checkers
+                 '(javascript-eslint javascript-jshint javascript-standard)))
   (add-hook 'before-save-hook '(lambda () (untabify (point-min) (point-max))) t t))
 
 (use-package js2-jsx-mode
-  :after (js2-mode)
-  :mode ("\\.jsx$" . js2-jsx-mode))
+  :no-require t
+  :mode ("\\.jsx$" . js2-jsx-mode)
+  :hook lsp
+  :after js2-mode
+  :config
+  (add-hook 'before-save-hook '(lambda () (untabify (point-min) (point-max))) t t))
 
 (use-package typescript-mode
   :ensure t
   :no-require t
   :mode ((("\\.tsx$" . typescript-mode) ("\\.ts$" . typescript-mode)))
+  :hook lsp
   :custom
   (typescript-indent-level 4)
   :config
   (add-hook 'before-save-hook '(lambda () (untabify (point-min) (point-max))) t t))
+;;;
 
 ;;; Bash
 (use-package company-shell
@@ -584,16 +660,23 @@
   (sh-basic-offset 4)
   :config
   (add-hook 'before-save-hook '(lambda () (untabify (point-min) (point-max))) nil t))
+;;;
 
 ;;; C/C++
 (use-package cc-mode
   :no-require t
-  :defer t
+  :hook lsp
   :custom
   (c-default-style "linux")
   (c-basic-offset 4)
   (c-tab-always-indent t)
   :config
+  (with-eval-after-load "company-clangd"
+    (setq-local company-clang-executable "clang-9"))
+  (with-eval-after-load "lsp-clients"
+    (setq-local lsp-clients-clangd-executable "clangd-9"))
+  (with-eval-after-load "flycheck"
+    (add-to-list 'flycheck-disabled-checkers '(c/c++-clang c/c++-cppcheck c/c++-gcc)))
   (add-hook 'before-save-hook '(lambda () (untabify (point-min) (point-max))) nil t))
 ;;;
 
@@ -624,8 +707,8 @@
 ;;; Rust
 (use-package rust-mode
   :ensure t
-  :defer t
   :no-require t
+  :hook lsp
   :custom
   (rust-indent-offset 4)
   :config
@@ -635,10 +718,13 @@
 ;;; Ruby
 (use-package ruby-mode
   :no-require t
-  :defer t
+  :hook lsp
   :custom
   (ruby-indent-level 2)
   (ruby-indent-tabs nil)
+  :init
+  (with-eval-after-load "lsp-clients"
+    (setq-local lsp-solargraph-use-bundler t))
   :config
   (add-hook 'before-save-hook '(lambda () (untabify (point-min) (point-max))) nil t))
 ;;;
@@ -663,7 +749,7 @@
 ;;; Terraform
 (use-package company-terraform
   :ensure t
-  :defer t
+  :hook terraform-mode
   :no-require t
   :after company
   :config
@@ -713,9 +799,9 @@
   :after company
   :hook ((tex-mode . company-math-mode)
          (TeX-mode . company-math-mode))
-  :config
-  (setq-local company-backends (append '((company-math-symbols-latex
-                                          company-latex-commands)) company-backends)))
+  :init
+  (add-to-list 'company-backends '(company-math-symbols-latex
+                                   company-latex-commands)))
 
 (use-package latex-preview-pane
   :ensure t
