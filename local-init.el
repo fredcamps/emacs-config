@@ -447,7 +447,7 @@
   (lsp-enable-on-type-formatting t)
   (lsp-diagnostic-package :flycheck)
   (lsp-restart 'auto-restart)
-  ;; (lsp-auto-guess-root t)
+  (lsp-auto-guess-root t)
   :init
   (eldoc-mode)
   :config
@@ -584,7 +584,6 @@
     (setq-local python-shell-interpreter "ipython")
     (setq-local python-shell-interpreter-args "-i --simple-prompt"))
   :config
-  (defalias 'run-python 'python)
   (add-hook 'before-save-hook '(lambda () (untabify (point-min) (point-max))) nil t))
 
 (use-package lsp-python-ms
@@ -672,7 +671,7 @@
   (c-basic-offset 4)
   (c-tab-always-indent t)
   :config
-  (with-eval-after-load "company-clangd"
+  (with-eval-after-load "company-clang"
     (setq-local company-clang-executable "clang-9"))
   (with-eval-after-load "lsp-clients"
     (setq-local lsp-clients-clangd-executable "clangd-9"))
