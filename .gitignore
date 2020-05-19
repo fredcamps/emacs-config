@@ -34,3 +34,6 @@ ede-projects.el
 
 # Undo-tree save-files
 *.~undo-tree
+
+# Lsp session files
+.lsp-session*
