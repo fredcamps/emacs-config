@@ -121,6 +121,7 @@
 (line-number-mode t)
 (column-number-mode t)
 (global-hl-line-mode t)
+(display-line-numbers-mode)
 (show-paren-mode t)
 (setq show-paren-style 'expression)
 (setq show-paren-priority -1)
@@ -244,7 +245,7 @@
   :no-require t
   :defer t
   :custom
-  (flycheck-indication-mode nil)
+  (flycheck-indication-mode 'left-margin)
   (flycheck-highlighting-mode 'lines)
   (flycheck-idle-change-delay 2)
   (flycheck-check-syntax-automatically '(mode-enabled
@@ -300,7 +301,7 @@
 
 (use-package projectile
   :ensure t
-  :after (smart-mode-line)
+  :after (doom-modeline)
   :custom
   (projectile-enable-caching t)
   (projectile-dynamic-mode-line t)
@@ -413,21 +414,37 @@
 (use-package doom-modeline
   :ensure t
   :init (doom-modeline-mode 1)
-  :config
-  (setq doom-modeline-project-detection 'projectile)
-  (setq doom-modeline-window-width-limit fill-column)
-  (setq doom-modeline-icon (display-graphic-p))
-  (setq doom-modeline-buffer-encoding t)
-  (setq doom-modeline-indent-info t)
-  (setq doom-modeline-checker-simple-format t)
-  (setq doom-modeline-vcs-max-length 12)
-  (setq doom-modeline-modal-icon t)
-  (setq doom-modeline-env-enable-ruby t)
-  (setq doom-modeline-env-enable-perl t)
-  (setq doom-modeline-env-enable-go t)
-  (setq doom-modeline-env-enable-elixir t)
-  (setq doom-modeline-env-enable-rust t)
-  (setq doom-modeline-env-load-string "..."))
+  :custom
+  (doom-modeline-height 25)
+  (doom-modeline-bar-width 3)
+  (doom-modeline-project-detection 'projectile)
+  (doom-modeline-window-width-limit fill-column)
+  (doom-modeline-buffer-file-name-style 'auto)
+  (doom-modeline-icon (display-graphic-p))
+  (doom-modeline-major-mode-icon t)
+  (doom-modeline-major-mode-color-icon t)
+  (doom-modeline-buffer-state-icon t)
+  (doom-modeline-buffer-modification-icon t)
+  (doom-modeline-unicode-fallback nil)
+  (doom-modeline-minor-modes nil)
+  (doom-modeline-enable-word-count nil)
+  (doom-modeline-continuous-word-count-modes '(markdown-mode gfm-mode org-mode))
+  (doom-modeline-buffer-encoding t)
+  (doom-modeline-indent-info t)
+  (doom-modeline-checker-simple-format t)
+  (doom-modeline-vcs-max-length 12)
+  (doom-modeline-persp-icon t)
+  (doom-modeline-lsp t)
+  (doom-modeline-modal-icon -1)
+  (doom-modeline-gnus t)
+  (doom-modeline-gnus-timer 2)
+  (doom-modeline-env-version t)
+  (doom-modeline-env-enable-ruby t)
+  (doom-modeline-env-enable-perl t)
+  (doom-modeline-env-enable-go t)
+  (doom-modeline-env-enable-elixir t)
+  (doom-modeline-env-enable-rust t)
+  (doom-modeline-env-load-string "..."))
 
 (use-package doom-themes
   :ensure t
