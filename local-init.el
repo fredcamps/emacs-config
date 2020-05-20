@@ -4,6 +4,20 @@
 ;; Author: Fred Campos <fred.tecnologia@gmail.com>
 ;; M-x eval-buffer for reload config
 ;;
+;; Some helpful bindings
+;; <C-x r t> # insert multiple lines on rectlangle/region
+;; <C-q c-j> # quote mode and insert new line
+;; <C-x SPC> # rentangle-mark-mode
+;; <M-g g>   # goto-line
+;; <C-x d> # dired-mode
+;; t-toggle_all
+;; m-mark
+;; u-unmark
+;; A query-regexp
+;; B query-replace
+;;
+;;
+;;
 ;;; Code:
 ;;
 (defconst packages-to-install
@@ -118,7 +132,7 @@
 (tool-bar-mode -1)
 (display-time-mode -1)
 (display-battery-mode -1)
-(line-number-mode t)
+(global-display-line-numbers-mode t)
 (column-number-mode t)
 (global-hl-line-mode t)
 (display-line-numbers-mode)
@@ -129,7 +143,7 @@
 ;;;
 
 ;;; Keybindings settings
-(define-key global-map (kbd "C-x C-b") 'ibuffer)
+;; (define-key global-map (kbd "C-x C-b") 'ibuffer)
 (define-key global-map (kbd "C-s") 'isearch-forward-regexp)
 (define-key global-map (kbd "C-r") 'isearch-backward-regexp)
 (define-key global-map (kbd "C-M-s") 'isearch-forward)
@@ -198,6 +212,7 @@
 (use-package protbuf
   :load-path "3rd-party"
   :commands protect-buffer-from-kill-mode
+  :demand t
   :config
   (protect-buffer-from-kill-mode nil (get-buffer "*scratch*")))
 
@@ -228,22 +243,58 @@
   :init
   (add-hook 'after-init-hook 'move-lines-mode))
 
+;; Disable for use counsel
 (use-package ido
   :commands ido-everywhere
   :custom
-  (ido-enable-flex-matching t)
+  (ido-enable-flex-matching nil)
   (ido-create-new-buffer 'prompt)
   (ido-use-faces nil)
   (ido-completion-buffer nil)
   (ido-completion-buffer-all-completions nil)
   :config
-  (ido-everywhere t)
-  (ido-mode +1))
+  (ido-everywhere nil)
+  (ido-mode -1))
+
+(use-package counsel
+  :ensure t
+  :no-require t
+  :config
+  (ivy-mode 1)
+  (setq ivy-use-virtual-buffers t)
+  (setq enable-recursive-minibuffers t)
+  ;; enable this if you want `swiper' to use it
+  ;; (setq search-default-mode #'char-fold-to-regexp)
+  (global-set-key "\C-s" 'swiper)
+  (global-set-key (kbd "C-c C-r") 'ivy-resume)
+  (global-set-key (kbd "C-c C-o") 'ivy-occur)
+  (global-set-key (kbd "<f6>") 'ivy-resume)
+  (global-set-key (kbd "M-x") 'counsel-M-x)
+  (global-set-key (kbd "C-x b") 'ivy-switch-buffer)
+  (global-set-key (kbd "C-x C-b") 'counsel-ibuffer)
+  (global-set-key (kbd "C-x C-f") 'counsel-find-file)
+  (global-set-key (kbd "<f1> f") 'counsel-describe-function)
+  (global-set-key (kbd "<f1> v") 'counsel-describe-variable)
+  (global-set-key (kbd "<f1> o") 'counsel-describe-symbol)
+  (global-set-key (kbd "<f1> l") 'counsel-find-library)
+  (global-set-key (kbd "<f2> i") 'counsel-info-lookup-symbol)
+  (global-set-key (kbd "<f2> u") 'counsel-unicode-char)
+  (global-set-key (kbd "C-c g") 'counsel-git)
+  (global-set-key (kbd "C-c j") 'counsel-git-grep)
+  (global-set-key (kbd "C-c k") 'counsel-ag)
+  (global-set-key (kbd "C-x l") 'counsel-locate)
+  (global-set-key (kbd "C-S-o") 'counsel-rhythmbox)
+  (define-key minibuffer-local-map (kbd "C-r") 'counsel-minibuffer-history))
+
+(use-package counsel-projectile
+  :ensure t
+  :bind (("C-c C-f" . counsel-projectile-find-file)
+         ("C-c p" . counsel-projectile-switch-project)))
 
 (use-package flycheck
   :ensure t
   :no-require t
-  :defer t
+  :hook (prog-mode . flycheck-mode)
   :custom
   (flycheck-indication-mode 'left-margin)
   (flycheck-highlighting-mode 'lines)
@@ -254,7 +305,6 @@
                                          new-line
                                          idle-buffer-switch))
   :init
-  (add-hook 'prog-mode-hook 'flycheck-mode)
   (flymake-mode -1)
   :config
   (set-face-attribute 'flycheck-info nil
@@ -309,8 +359,8 @@
   (projectile-completion-system 'ido)
   :config
   (projectile-mode t)
-  (define-key projectile-mode-map (kbd "C-c p") 'projectile-switch-project)
-  (define-key projectile-mode-map (kbd "C-c C-f") 'projectile-find-file))
+  (define-key projectile-mode-map (kbd "C-c C-f") nil)
+  (define-key projectile-mode-map (kbd "C-c p") nil))
 ;;;
 
 ;;; Snippets support
@@ -382,8 +432,10 @@
   :custom
   (httpd-port 54322))
 
-;; (use-package ag
-;;   :ensure t)
+(use-package ag
+  :ensure t
+  :no-require t
+  :defer t)
 
 (use-package column-enforce-mode
   :ensure t
@@ -457,8 +509,8 @@
   (doom-themes-visual-bell-config)
 
   ;; Treemacs theme
-  (setq doom-themes-treemacs-theme "doom-colors") ;; use the colorful treemacs theme
-  (doom-themes-treemacs-config)
+  ;; (setq doom-themes-treemacs-theme "doom-colors") ;; use the colorful treemacs theme
+  ;; (doom-themes-treemacs-config)
 
   ;; Corrects (and improves) org-mode's native fontification.
   (doom-themes-org-config)
@@ -475,9 +527,9 @@
 (use-package xclip
   :ensure t
   :pin gnu
-  :defer t
   :no-require t
-  :init)
+  :config
+  (xclip-mode +1))
 
 ;;; Language server protocol
 (use-package lsp-mode
@@ -499,36 +551,16 @@
   (lsp-keep-workspace-alive nil)
   (lsp-enable-completion-at-point -1)
   (lsp-enable-on-type-formatting t)
-  (lsp-diagnostic-package :flycheck)
+  (lsp-diagnostic-package :none)
   (lsp-restart 'auto-restart)
-  (lsp-auto-guess-root t)
+  (lsp-auto-guess-root nil)
   :init
   (eldoc-mode)
   :config
   (define-key lsp-mode-map (kbd "M-.") #'lsp-find-definition)
   (define-key lsp-mode-map (kbd "M-,") #'xref-pop-marker-stack)
   (define-key lsp-mode-map (kbd "C-c ,") #'xref-pop-marker-stack)
-  (define-key lsp-mode-map (kbd "C-x 4 .") #'xref-find-definitions-other-window)
-  (flycheck-mode +1))
-
-(use-package lsp-ui
-  :ensure t
-  :no-require t
-  :commands (lsp-ui-sideline-enable
-             lsp-ui-peek-enable
-             lsp-ui-doc-enable
-             lsp-ui-flycheck-enable
-             lsp-ui-imenu-enable)
-  :custom
-  (lsp-ui-doc-enable nil)
-  (lsp-ui-sideline-enable nil)
-  (lsp-ui-sideline-ignore-duplicate -1)
-  (lsp-ui-flycheck-enable t)
-  (lsp-ui-flycheck-live-reporting nil)
-  (lsp-ui-flycheck-list-position 'bottom)
-  (lsp-ui-peek-enable nil)
-  (lsp-ui-peek-show-directory nil)
-  (lsp-ui-imenu-enable nil))
+  (define-key lsp-mode-map (kbd "C-x 4 .") #'xref-find-definitions-other-window))
 
 (use-package company-lsp
   :ensure t
@@ -672,17 +704,17 @@
   :no-require t
   :mode ("\\.js$" . js2-mode)
   :interpreter "node"
-  :hook lsp
+  :hook (javascript-mode . lsp)
   :config
   (with-eval-after-load "flycheck"
-    (add-to-list 'flycheck-disabled-checkers
+    (add-to-list 'flycheck-enabled-checkers
                  '(javascript-eslint javascript-jshint javascript-standard)))
   (add-hook 'before-save-hook '(lambda () (untabify (point-min) (point-max))) t t))
 
 (use-package js2-jsx-mode
   :no-require t
   :mode ("\\.jsx$" . js2-jsx-mode)
-  :hook lsp
+  :hook (js2-jsx-mode . lsp)
   :after js2-mode
   :config
   (add-hook 'before-save-hook '(lambda () (untabify (point-min) (point-max))) t t))
@@ -691,7 +723,7 @@
   :ensure t
   :no-require t
   :mode ((("\\.tsx$" . typescript-mode) ("\\.ts$" . typescript-mode)))
-  :hook lsp
+  :hook (typescript-mode . lsp)
   :custom
   (typescript-indent-level 4)
   :config
@@ -716,9 +748,17 @@
 ;;;
 
 ;;; C/C++
+(use-package flycheck-clang-tidy
+  :ensure t
+  :no-require t
+  :hook
+  (flycheck-mode . flycheck-clang-tidy-setup)
+  :config
+  (setq-default flycheck-c/c++-clang-tidy-executable "clang-tidy-9"))
+
 (use-package cc-mode
   :no-require t
-  :hook lsp
+  :hook ((c-mode . lsp) (c++-mode . lsp))
   :custom
   (c-default-style "linux")
   (c-basic-offset 4)
@@ -729,7 +769,7 @@
   (with-eval-after-load "lsp-clients"
     (setq-local lsp-clients-clangd-executable "clangd-9"))
   (with-eval-after-load "flycheck"
-    (add-to-list 'flycheck-disabled-checkers '(c/c++-clang c/c++-cppcheck c/c++-gcc)))
+    (add-to-list 'flycheck-enabled-checkers '(c/c++-clang c/c++-cppcheck c/c++-gcc)))
   (add-hook 'before-save-hook '(lambda () (untabify (point-min) (point-max))) nil t))
 ;;;
 
@@ -758,25 +798,27 @@
 ;;;
 
 ;;; Rust
-;; (use-package flycheck-rust
-;;   :ensure t
-;;   :no-require t
-;;   :init
-;;   (add-hook 'flycheck-mode-hook #'flycheck-rust-setup))
+(use-package flycheck-rust
+  :ensure t
+  :no-require t
+  :config
+  (add-hook 'flycheck-mode-hook #'flycheck-rust-setup))
 
 (use-package rust-mode
   :ensure t
   :no-require t
-  :hook (rust-mode . (lambda () (lsp)))
+  :hook (rust-mode . lsp)
   :custom
   (rust-indent-offset 4)
+  :init
+  (add-hook 'before-save-hook '(lambda () (untabify (point-min) (point-max))) t t)
   :config
-  (add-hook 'before-save-hook '(lambda () (untabify (point-min) (point-max))) nil t)
-  (with-eval-after-load "lsp-ui"
-    (setq lsp-ui-flycheck-enable t))
-  (with-eval-after-load "lsp-rust"
-    (setq lsp-rust-server 'rust-analyzer)
-    (setq-local lsp-rust-all-features t)))
+  (with-eval-after-load "flycheck"
+    (flycheck-mode +1)
+    (flycheck-disable-checker 'lsp)
+    (setq-local flycheck-checker 'rust-clippy))
+  (setq-local lsp-rust-all-features t)
+  (setq lsp-rust-server 'rust-analyzer))
 ;;;
 
 ;;; Ruby

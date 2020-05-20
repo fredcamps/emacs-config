@@ -37,3 +37,6 @@ ede-projects.el
 
 # Lsp session files
 .lsp-session*
+
+# Remove recent buffer files
+recentf
