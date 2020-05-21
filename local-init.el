@@ -355,12 +355,12 @@
   :custom
   (projectile-enable-caching t)
   (projectile-dynamic-mode-line t)
+  (projectile-indexing-method 'alien)
   (projectile-require-project-root 't)
-  (projectile-completion-system 'ido)
+  (projectile-completion-system 'ivy)
+  (projectile-tags-backend 'auto)
   :config
-  (projectile-mode t)
-  (define-key projectile-mode-map (kbd "C-c C-f") nil)
-  (define-key projectile-mode-map (kbd "C-c p") nil))
+  (projectile-mode +1))
 ;;;
 
 ;;; Snippets support
@@ -535,11 +535,11 @@
 (use-package lsp-mode
   :ensure t
   :no-require t
+  :after projectile
   :commands (lsp-find-definition)
   :custom
   (lsp-idle-delay 1)
   (lsp-inhibit-lsp-hooks t)
-  (lsp-disabled-clients '(lsp-pyls))
   (lsp-auto-configure -1)
   (lsp-eldoc-render-all t)
   (lsp-log-io nil)
@@ -553,10 +553,10 @@
   (lsp-enable-on-type-formatting t)
   (lsp-diagnostic-package :none)
   (lsp-restart 'auto-restart)
-  (lsp-auto-guess-root nil)
   :init
   (eldoc-mode)
   :config
+  (add-to-list 'lsp-disabled-clients 'pyls)
   (define-key lsp-mode-map (kbd "M-.") #'lsp-find-definition)
   (define-key lsp-mode-map (kbd "M-,") #'xref-pop-marker-stack)
   (define-key lsp-mode-map (kbd "C-c ,") #'xref-pop-marker-stack)
@@ -671,16 +671,12 @@
   :config
   (add-hook 'before-save-hook '(lambda () (untabify (point-min) (point-max))) nil t))
 
-(use-package lsp-python-ms
-  :ensure t
-  :no-require t
-  :defer t
-  :custom
-  (lsp-python-ms-disabled [])
-  (lsp-python-ms-python-executable-cmd "python")
-  (lsp-python-ms-cache "System")
-  (lsp-python-ms-executable
-   "/opt/pyls/output/bin/Release/Microsoft.Python.LanguageServer"))
+(use-package lsp-jedi
+  :load-path "site-lisp/lsp-jedi"
+  ;; :no-require t
+  :config
+  (with-eval-after-load "lsp-mode"
+    (add-to-list 'lsp-enabled-clients 'jedi)))
 
 (use-package elisp-python
   :load-path "site-lisp"
@@ -765,9 +761,9 @@
   (c-tab-always-indent t)
   :config
   (with-eval-after-load "company-clang"
-    (setq-local company-clang-executable "clang-9"))
+    (setq company-clang-executable "clang-9"))
   (with-eval-after-load "lsp-clients"
-    (setq-local lsp-clients-clangd-executable "clangd-9"))
+    (setq lsp-clients-clangd-executable "clangd-9"))
   (with-eval-after-load "flycheck"
     (add-to-list 'flycheck-enabled-checkers '(c/c++-clang c/c++-cppcheck c/c++-gcc)))
   (add-hook 'before-save-hook '(lambda () (untabify (point-min) (point-max))) nil t))
@@ -785,14 +781,10 @@
   :no-require t
   :commands (markdown-mode gfm-mode)
   :mode (("README\\.md\\'" . gfm-mode)
-         ("README\\.rst\\'" . gfm-mode)
-         ("\\.rst\\'" . markdown-mode)
          ("\\.md\\'" . markdown-mode)
          ("\\.markdown\\'" . markdown-mode))
   :bind (:map markdown-mode-map
               ("C-c C-c l" . markdown-live-preview-mode))
-  :custom
-  (markdown-command "multimarkdown")
   :config
   (add-hook 'before-save-hook '(lambda () (untabify (point-min) (point-max))) nil t))
 ;;;
