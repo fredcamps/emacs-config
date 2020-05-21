@@ -288,7 +288,7 @@
 
 (use-package counsel-projectile
   :ensure t
-  :bind (("C-c C-f" . counsel-projectile-find-file)
+  :bind (("C-c f" . counsel-projectile-find-file)
          ("C-c p" . counsel-projectile-switch-project)))
 
 (use-package flycheck
@@ -535,13 +535,12 @@
 (use-package lsp-mode
   :ensure t
   :no-require t
-  :after projectile
   :commands (lsp-find-definition)
   :custom
   (lsp-idle-delay 1)
   (lsp-inhibit-lsp-hooks t)
   (lsp-auto-configure -1)
-  (lsp-eldoc-render-all t)
+  (lsp-eldoc-render-all nil)
   (lsp-log-io nil)
   (lsp-enable-folding nil)
   (lsp-print-performance t)
@@ -646,9 +645,9 @@
 
 (use-package pytest
   :ensure t
-  :no-require t
-  :bind (:map python-mode-map
-              ("C-c C-t" . pytest-pdb-one))
+  :init
+  (add-hook 'python-mode-hook
+            (lambda () (define-key python-mode-map (kbd "C-c C-t") 'pytest-pdb-one)))
   :custom
   (pytest-project-root-files '(".projectile" "pyproject.toml" ".dir-locals.el"))
   (pytest-cmd-format-string "cd '%s' ; and %s %s '%s'"))
