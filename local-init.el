@@ -815,7 +815,7 @@
 ;;; Ruby
 (use-package ruby-mode
   :no-require t
-  :hook lsp
+  :hook (ruby-mode . lsp)
   :custom
   (ruby-indent-level 2)
   (ruby-indent-tabs nil)
