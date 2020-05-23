@@ -37,7 +37,7 @@
            "https://raw.githubusercontent.com/d12frosted/elpa-mirror/master/gnu/")))
   (package-refresh-contents))
 
-(defun init:install-missing-package ()
+(defun init:install-missing-packages ()
   "Install missing packages."
   (init:setup-repository)
   (dolist (pkg packages-to-install)
@@ -56,14 +56,10 @@
   (setq use-package-always-ensure nil))
 
 ;; --- Emacs settings --- ;;
-;;; error and logging
-;(setq debug-on-error t)
-;(setq debug-ignored-errors t)
-;(setq message-log-max 1000)
-;;;
-
 ;;; Perfomance
 (setq gc-cons-threshold 100000000)
+;(setq max-lisp-eval-depth 10000)
+;(setq max-specpdl-size 10000)
 ;;;
 
 ;;; Encoding
@@ -82,11 +78,9 @@
 ;;;
 
 ;;; Behaviour settings
-;(setq max-lisp-eval-depth 10000)
-;(setq max-specpdl-size 10000)
-;;(setq visible-bell t)
 (setq load-prefer-newer t)
-
+(with-current-buffer "*scratch*"
+  (emacs-lock-mode 'kill))
 (electric-pair-mode t)
 (defalias 'yes-or-no-p 'y-or-n-p)
 (setq-default save-interprogram-paste-before-kill t
@@ -106,7 +100,6 @@
  '(comint-input-ignoredups t) ; no duplicates in command history
  '(comint-completion-addsuffix t) ; insert space/slash after file completion
  )
-(icomplete-mode +1)
 (setq completion-auto-help t)
 ;;;
 
@@ -135,7 +128,6 @@
 (global-display-line-numbers-mode t)
 (column-number-mode t)
 (global-hl-line-mode t)
-(display-line-numbers-mode)
 (show-paren-mode t)
 (setq show-paren-style 'expression)
 (setq show-paren-priority -1)
@@ -143,18 +135,21 @@
 ;;;
 
 ;;; Keybindings settings
-;; (define-key global-map (kbd "C-x C-b") 'ibuffer)
-(define-key global-map (kbd "C-s") 'isearch-forward-regexp)
-(define-key global-map (kbd "C-r") 'isearch-backward-regexp)
-(define-key global-map (kbd "C-M-s") 'isearch-forward)
-(define-key global-map (kbd "C-M-r") 'isearch-backward)
-(define-key global-map (kbd "M-/") 'hippie-expand)
-(define-key global-map (kbd "RET") 'newline-and-indent)
-(define-key global-map (kbd "C-x t") #'ansi-term)
-(define-key global-map (kbd "M-.") #'xref-find-definitions)
-(define-key global-map (kbd "M-,") #'xref-pop-marker-stack)
-(define-key global-map (kbd "C-x 4 ,") #'xref-find-definitions-other-window)
-(define-key global-map (kbd "<backtab>") #'indent-for-tab-command)
+(global-set-key (kbd "M-g <up>") 'windmove-up)
+(global-set-key (kbd "M-g <down>") 'windmove-down)
+(global-set-key (kbd "M-g <left>") 'windmove-left)
+(global-set-key (kbd "M-g <right>") 'windmove-right)
+(global-set-key (kbd "C-c -") 'shrink-window-horizontally)
+(global-set-key (kbd "C-c +") 'enlarge-window-horizontally)
+(global-set-key (kbd "C-x -") 'shrink-window)
+(global-set-key (kbd "C-x +") 'enlarge-window)
+(global-set-key (kbd "M-/") 'hippie-expand)
+(global-set-key (kbd "RET") 'newline-and-indent)
+(global-set-key (kbd "C-x t") #'ansi-term)
+(global-set-key (kbd "M-.") #'xref-find-definitions)
+(global-set-key (kbd "M-,") #'xref-pop-marker-stack)
+(global-set-key (kbd "C-x 4 ,") #'xref-find-definitions-other-window)
+(global-set-key (kbd "<backtab>") #'indent-for-tab-command)
 ;;;
 
 ;;; Spellchecking
@@ -197,24 +192,17 @@
 ;; --- ;;
 
 ;; --- Extensions settings --- ;;
-;; (use-package esup
-;;   :ensure t
-;;   :no-require t
-;;   :commands (esup)
-;;   :config
-;;   (setenv "TERM" "screen-256color"))
+(use-package esup
+  :ensure t
+  :no-require t
+  :commands (esup)
+  :config
+  (setenv "TERM" "screen-256color"))
 
 (use-package epc
   :ensure t
   :no-require t
   :defer t)
-
-(use-package protbuf
-  :load-path "3rd-party"
-  :commands protect-buffer-from-kill-mode
-  :demand t
-  :config
-  (protect-buffer-from-kill-mode nil (get-buffer "*scratch*")))
 
 (use-package auto-compile
   :hook elisp-mode-hook
@@ -242,19 +230,6 @@
   :commands move-lines-mode
   :init
   (add-hook 'after-init-hook 'move-lines-mode))
-
-;; Disable for use counsel
-(use-package ido
-  :commands ido-everywhere
-  :custom
-  (ido-enable-flex-matching nil)
-  (ido-create-new-buffer 'prompt)
-  (ido-use-faces nil)
-  (ido-completion-buffer nil)
-  (ido-completion-buffer-all-completions nil)
-  :config
-  (ido-everywhere nil)
-  (ido-mode -1))
 
 (use-package counsel
   :ensure t
@@ -288,6 +263,7 @@
 
 (use-package counsel-projectile
   :ensure t
+  :no-require t
   :bind (("C-c f" . counsel-projectile-find-file)
          ("C-c p" . counsel-projectile-switch-project)))
 
@@ -351,6 +327,8 @@
 
 (use-package projectile
   :ensure t
+  :defer t
+  :no-require t
   :after (doom-modeline)
   :custom
   (projectile-enable-caching t)
@@ -367,7 +345,6 @@
 (use-package yasnippet
   :ensure t
   :no-require t
-  :defer t
   :init
   (add-hook 'prog-mode-hook 'yas-minor-mode)
   :config
@@ -417,9 +394,9 @@
   :ensure t)
 
 (use-package restclient
-  :mode "\\.rest$'"
-  :no-require t
-  :ensure t)
+  :ensure t
+  :defer t
+  :no-require t)
 ;;;
 
 (use-package skewer-mode
@@ -431,11 +408,6 @@
          (html-mode . skewer-html-mode))
   :custom
   (httpd-port 54322))
-
-(use-package ag
-  :ensure t
-  :no-require t
-  :defer t)
 
 (use-package column-enforce-mode
   :ensure t
@@ -531,6 +503,19 @@
   :config
   (xclip-mode +1))
 
+(use-package dumb-jump
+  :ensure t
+  :no-require t
+  :bind (("M-g o" . dumb-jump-go-other-window)
+         ("M-g j" . dumb-jump-go)
+         ("M-g b" . dumb-jump-back)
+         ("M-g i" . dumb-jump-go-prompt)
+         ("M-g x" . dumb-jump-go-prefer-external)
+         ("M-g z" . dumb-jump-go-prefer-external-other-window))
+  :init
+  (setq dumb-jump-selector 'ivy)
+  (setq dumb-jump-force-searcher 'ag))
+
 ;;; Language server protocol
 (use-package lsp-mode
   :ensure t
@@ -596,7 +581,6 @@
 (use-package yaml-mode
   :no-require t
   :ensure t
-  :defer t
   :config
   (add-hook 'before-save-hook '(lambda () (untabify (point-min) (point-max))) nil t))
 ;;;
@@ -645,6 +629,7 @@
 
 (use-package pytest
   :ensure t
+  :no-require t
   :init
   (add-hook 'python-mode-hook
             (lambda () (define-key python-mode-map (kbd "C-c C-t") 'pytest-pdb-one)))
@@ -654,6 +639,7 @@
 
 (use-package python
   :no-require t
+  :hook (python-mode . lsp)
   :commands (python-indent-shift-left python-indent-shift-right)
   :bind (:map python-mode-map
               ("<tab>" . 'python-indent-shift-right)
@@ -664,25 +650,28 @@
   (python-indent-guess-indent-offset nil)
   (python-indent-guess-indent-offset-verbose nil)
   :init
+  (hack-local-variables)
   (when (executable-find "ipython")
     (setq-local python-shell-interpreter "ipython")
     (setq-local python-shell-interpreter-args "-i --simple-prompt"))
   :config
+  (with-eval-after-load "flycheck"
+    (add-to-list 'flycheck-disabled-checkers '(python-mypy))
+    (add-to-list 'flycheck-enabled-checkers '(python-pycompile
+                                              python-pylint
+                                              python-flake8))
+    (setq-local flycheck-checker 'python-flake8)
+    (when (executable-find "flake8")
+      (setq-local flycheck-python-flake8-executable (executable-find "flake8"))
+      (setq flycheck-flake8rc (file-name-directory (expand-file-name ".flake8")))))
+
   (add-hook 'before-save-hook '(lambda () (untabify (point-min) (point-max))) nil t))
 
 (use-package lsp-jedi
-  :load-path "site-lisp/lsp-jedi"
-  ;; :no-require t
-  :config
-  (with-eval-after-load "lsp-mode"
-    (add-to-list 'lsp-enabled-clients 'jedi)))
+  :load-path "site-lisp")
 
 (use-package elisp-python
-  :load-path "site-lisp"
-  :no-require t
-  :commands python:bootstrap
-  :hook ((python-mode . python:bootstrap)
-         (after-hack-local-variables . (lambda () (lsp 1)))))
+  :load-path "site-lisp")
 ;;;
 
 ;;; Javascript/Typescript
@@ -735,7 +724,6 @@
 
 (use-package sh-script
   :no-require t
-  :defer t
   :custom
   (sh-basic-offset 4)
   :config
@@ -746,9 +734,9 @@
 (use-package flycheck-clang-tidy
   :ensure t
   :no-require t
-  :hook
-  (flycheck-mode . flycheck-clang-tidy-setup)
+  :after (cc-mode flycheck)
   :config
+  (add-hook 'flycheck-mode-hook 'flycheck-clang-tidy-setup)
   (setq-default flycheck-c/c++-clang-tidy-executable "clang-tidy-9"))
 
 (use-package cc-mode
@@ -792,6 +780,7 @@
 (use-package flycheck-rust
   :ensure t
   :no-require t
+  :after (rust-mode flycheck)
   :config
   (add-hook 'flycheck-mode-hook #'flycheck-rust-setup))
 
@@ -829,7 +818,6 @@
 ;;; SQL
 (use-package sql
   :no-require t
-  :defer t
   :config
   (add-hook 'before-save-hook '(lambda () (untabify (point-min) (point-max))) nil t))
 ;;;
@@ -837,7 +825,6 @@
 ;;; Assembly x86
 (use-package nasm-mode
   :ensure t
-  :defer t
   :no-require t
   :custom
   (nasm-basic-offset 4))
@@ -855,7 +842,6 @@
 (use-package terraform-mode
   :ensure t
   :no-require t
-  :defer t
   :custom
   (terraform-indent-level 2)
   :config
@@ -885,7 +871,6 @@
 ;;; Dockerfile
 (use-package dockerfile-mode
   :ensure t
-  :defer t
   :no-require t)
 ;;;
 
