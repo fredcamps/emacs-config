@@ -261,7 +261,8 @@
   ;; enable this if you want `swiper' to use it
   ;; (setq search-default-mode #'char-fold-to-regexp)
   (global-set-key "\C-s" 'swiper)
-  (global-set-key (kbd "C-c C-r") 'ivy-resume)
+  (global-set-key "\C-r" 'swiper)
+  (global-set-key (kbd "C-c r") 'ivy-resume)
   (global-set-key (kbd "C-c C-o") 'ivy-occur)
   (global-set-key (kbd "<f6>") 'ivy-resume)
   (global-set-key (kbd "M-x") 'counsel-M-x)
@@ -479,7 +480,7 @@
   (doom-modeline-bar-width 3)
   (doom-modeline-project-detection 'projectile)
   (doom-modeline-window-width-limit fill-column)
-  (doom-modeline-buffer-file-name-style 'auto)
+  (doom-modeline-buffer-file-name-style 'relative-from-project)
   (doom-modeline-icon (display-graphic-p))
   (doom-modeline-major-mode-icon t)
   (doom-modeline-major-mode-color-icon t)
@@ -622,7 +623,7 @@
 ;;; easy compile and run
 (use-package quickrun
   :ensure t
-  :defer t
+  :bind (:map prog-mode-map ("C-x r" . quickrun))
   :no-require t)
 ;;;
 
@@ -636,13 +637,18 @@
 ;;; debugger
 (use-package realgud
   :ensure t
-  :defer t
+  :bind (:map python-mode-map
+              ("C-x d" . realgud:node-inspect)
+         :map cc-mode-map
+              ("C-x d" . realgud:gdb)
+         :map rust-mode-map
+              ("C-x d" . realgud:gdb))
   :commands (realgud:pdb realgud:gdb)
   :no-require t)
 
 (use-package realgud-node-inspect
   :ensure t
-  :defer t
+  :bind (:map js2-mode-map ("C-x d" . realgud:node-inspect))
   :commands (realgud:node-inspect))
 ;;;
 
@@ -681,6 +687,10 @@
          (ielm-mode-hook . elisp-slime-nav-mode)))
 
 (use-package package-lint
+  :no-require t
+  :ensure t)
+
+(use-package elisp-lint
   :no-require t
   :hook emacs-lisp-mode-hook
   :ensure t)
@@ -726,7 +736,7 @@
 
 (use-package python
   :no-require t
-  :hook ((python-mode . (lambda () (python:setup) (lsp))))
+  :hook ((python-mode . (lambda () (lsp) (python:setup) )))
   :commands (python-indent-shift-left python-indent-shift-right)
   :bind (:map python-mode-map
               ("<tab>" . python-indent-shift-right)
@@ -739,26 +749,26 @@
   :init
   (hack-local-variables)
   :config
+  (defun python:--replace-template-variables (dir-locals-file)
+    "Replace variables from .dir-locals.el file.  DIR-LOCALS-FILE."
+    (with-eval-after-load "virtualenvwrapper"
+      (call-interactively #'venv-workon)
+      (utils:replace-string-in-file dir-locals-file
+                                    "{{ VENV-NAME }}" venv-current-name)))
+
   (defun python:setup ()
     "Function that setups 'python-mode'."
     (hack-local-variables)
     (setq python-shell-interpreter (executable-find "ipython"))
     (setq python-shell-interpreter-args "-i --simple-prompt")
-    (with-eval-after-load "flycheck"
-      (add-to-list 'flycheck-disabled-checkers '(python-mypy))
-      (add-to-list 'flycheck-enabled-checkers '(python-pycompile
-                                                python-pylint
-                                                python-flake8))
+    (setq flycheck-disabled-checkers '(python-mypy))
+    (setq flycheck-enabled-checkers '(python-pycompile
+                                      python-pylint
+                                      python-flake8))
+    (when (executable-find "flake8")
       (setq-local flycheck-checker 'python-flake8)
-      (when (executable-find "flake8")
-        (setq-local flycheck-python-flake8-executable (executable-find "flake8"))
-        (setq flycheck-flake8rc (file-name-directory (expand-file-name ".flake8"))))))
-
-  (defun python:--replace-template-variables (dir-locals-file)
-    "Replace variables from .dir-locals.el file.  DIR-LOCALS-FILE."
-    (with-eval-after-load "virtualenvwrapper"
-      (call-interactively #'venv-workon)
-      (utils:replace-string-in-file dir-locals-file "{{ VENV-NAME }}" venv-current-name)))
+      (setq-local flycheck-python-flake8-executable (executable-find "flake8"))
+      (setq flycheck-flake8rc (file-name-directory (expand-file-name ".flake8")))))
 
   (defun python:init ()
     "Initialize project for 'python-mode'."
@@ -805,9 +815,8 @@
   :interpreter "node"
   :hook (javascript-mode . lsp)
   :config
-  (with-eval-after-load "flycheck"
-    (add-to-list 'flycheck-enabled-checkers
-                 '(javascript-eslint javascript-jshint javascript-standard))))
+  (setq flycheck-enabled-checkers
+        '(javascript-eslint javascript-jshint javascript-standard)))
 
 (use-package js2-jsx-mode
   :no-require t
@@ -859,8 +868,7 @@
     (setq company-clang-executable "clang-9"))
   (with-eval-after-load "lsp-clients"
     (setq lsp-clients-clangd-executable "clangd-9"))
-  (with-eval-after-load "flycheck"
-    (add-to-list 'flycheck-enabled-checkers '(c/c++-clang c/c++-cppcheck c/c++-gcc))))
+  (setq flycheck-enabled-checkers '(c/c++-clang c/c++-cppcheck c/c++-gcc)))
 ;;;
 
 ;;; Make
@@ -894,10 +902,7 @@
   :custom
   (rust-indent-offset 4)
   :config
-  (with-eval-after-load "flycheck"
-    (flycheck-mode +1)
-    (flycheck-disable-checker 'lsp)
-    (setq-local flycheck-checker 'rust-clippy))
+  (setq-local flycheck-checker 'rust-clippy)
   (setq lsp-rust-all-features t)
   (setq lsp-rust-server 'rust-analyzer))
 ;;;
