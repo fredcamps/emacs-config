@@ -3,6 +3,7 @@ auto-save-alist
 dict
 el-get
 elpa
+eshell
 tmp
 transient
 url/
