@@ -125,5 +125,13 @@
   (interactive)
   (write-region "" nil (expand-file-name ".projectile")))
 
+(defun utils:smart-tabify ()
+  "Apply the right tabulation."
+  (let (tabify-list)
+    (setq tabify-list '(make-mode))
+    (if (member major-mode tabify-list)
+        (tabify (point-min) (point-max))
+      (untabify (point-min) (point-max)))))
+
 (provide 'utils)
 ;;; utils ends here

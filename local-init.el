@@ -28,13 +28,18 @@
   "Set repository channels."
   (setq package-enable-at-startup nil)
   (setq package-check-signature nil)
+  ;; (setq package-archives
+  ;;      '(("melpa" .
+  ;;         "https://raw.githubusercontent.com/d12frosted/elpa-mirror/master/melpa/")
+  ;;        ("org" .
+  ;;         "https://raw.githubusercontent.com/d12frosted/elpa-mirror/master/org/")
+  ;;        ("gnu" .
+  ;;         "https://raw.githubusercontent.com/d12frosted/elpa-mirror/master/gnu/")))
   (setq package-archives
-        '(("melpa" .
-           "https://raw.githubusercontent.com/d12frosted/elpa-mirror/master/melpa/")
-          ("org" .
-           "https://raw.githubusercontent.com/d12frosted/elpa-mirror/master/org/")
-          ("gnu" .
-           "https://raw.githubusercontent.com/d12frosted/elpa-mirror/master/gnu/")))
+        '(("melpa" . "https://melpa.org/packages/")
+          ("org" . "http://orgmode.org/elpa/")
+          ("gnu" . "https://elpa.gnu.org/packages/")))
+
   (package-refresh-contents))
 
 (defun init:install-missing-packages ()
@@ -78,11 +83,12 @@
 ;;;
 
 ;;; Behaviour settings
+(setq search-whitespace-regexp ".*?")
 (setq load-prefer-newer t)
 (with-current-buffer "*scratch*"
   (emacs-lock-mode 'kill))
 (electric-pair-mode t)
-(defalias 'yes-or-no-p 'y-or-n-p)
+(fset 'yes-or-no-p 'y-or-n-p)
 (setq-default save-interprogram-paste-before-kill t
               uniquify-buffer-name-style 'forward
               require-final-newline t
@@ -101,6 +107,7 @@
  '(comint-completion-addsuffix t) ; insert space/slash after file completion
  )
 (setq completion-auto-help t)
+(setq doc-view-continuous t)
 ;;;
 
 ;;; Misc settings
@@ -135,9 +142,13 @@
 ;;;
 
 ;;; Keybindings settings
+(global-set-key (kbd "M-g C-p") 'windmove-up)
 (global-set-key (kbd "M-g <up>") 'windmove-up)
 (global-set-key (kbd "M-g <down>") 'windmove-down)
+(global-set-key (kbd "M-g C-n") 'windmove-down)
+(global-set-key (kbd "M-g C-b") 'windmove-left)
 (global-set-key (kbd "M-g <left>") 'windmove-left)
+(global-set-key (kbd "M-g C-f") 'windmove-right)
 (global-set-key (kbd "M-g <right>") 'windmove-right)
 (global-set-key (kbd "C-c -") 'shrink-window-horizontally)
 (global-set-key (kbd "C-c +") 'enlarge-window-horizontally)
@@ -160,6 +171,12 @@
 (dolist (hook '(change-log-mode-hook log-edit-mode-hook))
   (add-hook hook (lambda ()
                    (flyspell-mode -1))))
+;;;
+
+;;; Remote access
+(setq tramp-default-method "ssh"
+      tramp-backup-directory-alist backup-directory-alist
+      tramp-ssh-controlmaster-options "ssh")
 ;;;
 
 ;;; Hooks
@@ -185,25 +202,39 @@
 ;;; Indentation hooks
 (add-hook 'make-file-mode-hook '(lambda()
                                   (setq-local tab-width 4)
-                                  (setq-local indent-tabs-mode t)) nil t)
-(add-hook 'markdown-mode-hook '(lambda() (setq-local tab-width 4)) nil t)
-(add-hook 'sql-mode-hook '(lambda() (setq-local tab-width 4)) nil t)
+                                  (setq-local indent-tabs-mode t)) t t)
+(add-hook 'markdown-mode-hook '(lambda() (setq-local tab-width 4)) t t)
+(add-hook 'sql-mode-hook '(lambda() (setq-local tab-width 4)) t t)
 ;;;
 ;; --- ;;
 
 ;; --- Extensions settings --- ;;
+;;; Profile Emacs startup
 (use-package esup
   :ensure t
   :no-require t
   :commands (esup)
   :config
-  (setenv "TERM" "screen-256color"))
+  (setenv "TERM" "screen-24bits"))
+;;;
 
+;;; RPC stack
 (use-package epc
   :ensure t
   :no-require t
   :defer t)
+;;;
 
+;;; Move lines
+(use-package move-dup
+  :ensure t
+  :bind (("M-p" . md-move-lines-up)
+         ("C-M-p" . md-duplicate-up)
+         ("M-n" . md-move-lines-down)
+         ("C-M-n" . md-duplicate-down)))
+;;;
+
+;;; Auto compile elisp packages
 (use-package auto-compile
   :hook elisp-mode-hook
   :demand t
@@ -217,20 +248,9 @@
   :config
   (auto-compile-on-load-mode t)
   (auto-compile-on-save-mode t))
+;;;
 
-(use-package redo+
-  :load-path "3rd-party"
-  :no-require t
-  :bind (("C-x u" . undo-only)
-         ("C-x U" . redo)))
-
-(use-package move-lines
-  :load-path "3rd-party"
-  :no-require t
-  :commands move-lines-mode
-  :init
-  (add-hook 'after-init-hook 'move-lines-mode))
-
+;;; Better than IDO
 (use-package counsel
   :ensure t
   :no-require t
@@ -266,7 +286,9 @@
   :no-require t
   :bind (("C-c f" . counsel-projectile-find-file)
          ("C-c p" . counsel-projectile-switch-project)))
+;;;
 
+;;; Diagnostic checker on the fly
 (use-package flycheck
   :ensure t
   :no-require t
@@ -295,8 +317,9 @@
                       :background nil
                       :foreground "#dc322f"
                       :underline t))
+;;;
 
-;;; Company
+;;; Company completion framework
 (use-package company
   :ensure t
   :no-require t
@@ -320,11 +343,12 @@
   :custom
   (company-dict-enable-fuzzy nil)
   (company-dict-enable-yasnippet +1)
-  :init
-  (setq-local company-dict-dir (concat user-emacs-directory "dict"))
+  :config
+  (setq company-dict-dir (concat user-emacs-directory "dict"))
   (add-to-list 'company-backends 'company-dict))
 ;;;
 
+;;; Project management support
 (use-package projectile
   :ensure t
   :defer t
@@ -378,11 +402,13 @@
   :no-require t)
 ;;;
 
+;;; Occur and folding
 (use-package loccur
   :ensure t
   :no-require t
   :bind (:map prog-mode-map
               ("C-c o" . loccur)))
+;;;
 
 ;;; Rest Client
 (use-package company-restclient
@@ -399,6 +425,7 @@
   :no-require t)
 ;;;
 
+;;; Static/markup files preview
 (use-package skewer-mode
   :ensure t
   :no-require t
@@ -408,31 +435,40 @@
          (html-mode . skewer-html-mode))
   :custom
   (httpd-port 54322))
+;;;
 
+;;; Highlight exceeded columns limit
 (use-package column-enforce-mode
   :ensure t
   :no-require t
   :hook (prog-mode . column-enforce-mode)
   :custom
   (column-enforce-column 100))
+;;;
 
+;;; Indent guide line
 (use-package indent-guide
   :no-require t
   :defer t
   :ensure t)
+;;;
 
+;;; Show color by hex
 (use-package rainbow-mode
   :ensure t
   :no-require t
   :defer t
   :pin gnu)
+;;;
 
+;;; Colorize delimiters by scope
 (use-package rainbow-delimiters
   :ensure t
   :no-require t
   :defer t
   :init
   (add-hook 'prog-mode-hook 'rainbow-delimiters-mode))
+;;;
 
 ;;; Doom-mode
 (use-package doom-modeline
@@ -495,14 +531,18 @@
                       :foreground "#0F0"
                       :background "#000" :bold t)
   (set-face-attribute 'show-paren-mismatch nil :foreground "red" :foreground "#000"))
+;;;
 
+;;; Clipboard sharing
 (use-package xclip
   :ensure t
   :pin gnu
   :no-require t
   :config
   (xclip-mode +1))
+;;;
 
+;;; Generic code jumping
 (use-package dumb-jump
   :ensure t
   :no-require t
@@ -515,6 +555,7 @@
   :init
   (setq dumb-jump-selector 'ivy)
   (setq dumb-jump-force-searcher 'ag))
+;;;
 
 ;;; Language server protocol
 (use-package lsp-mode
@@ -557,15 +598,60 @@
         company-lsp-async t
         company-lsp-cache-candidates nil))
 ;;;
+
+;;; better than built-in python-shell-send
+(use-package eval-in-repl
+  :ensure t
+  :no-require t
+  :init
+  (setq eir-repl-placement 'left)
+  (setq eir-ielm-eval-in-current-buffer t)
+  (defun eval-in-js ()
+    (eir-eval-in-javascript))
+  (defun eval-in-python ()
+    (eir-eval-in-python)
+    (python-shell-switch-to-shell))
+  (add-hook 'sh-mode-hook
+            '(lambda() (local-set-key (kbd "C-c C-c") 'eir-eval-in-shell)))
+  (add-hook 'js2-mode-hook
+            '(lambda () (local-set-key (kbd "C-c C-c") 'eval-in-js)))
+  (add-hook 'python-mode-hook
+            '(lambda () (local-set-key (kbd "C-c C-c") 'eval-in-python))))
+;;;
+
+;;; easy compile and run
+(use-package quickrun
+  :ensure t
+  :defer t
+  :no-require t)
+;;;
+
+;;; easy disassembly while compiling
+(use-package rmsbolt
+  :ensure t
+  :defer t
+  :no-require t)
+;;;
+
+;;; debugger
+(use-package realgud
+  :ensure t
+  :defer t
+  :no-require t)
+;;;
+
 ;; --- ;;
 
 ;; --- My Custom utilities --- ;;
 (use-package utils
   :no-require t
   :load-path "site-lisp"
+  :commands (utils:smart-tabify utils:replace-string-in-file utils:generate-project-files)
   :bind (("C-c SPC" . utils:toggle-invisibles)
          ("C-c k" . utils:kill-all-buffers)
-         ("C-c n" . utils:new-buffer-frame)))
+         ("C-c n" . utils:new-buffer-frame))
+  :config
+  (add-hook 'before-save-hook 'utils:smart-tabify t t))
 ;; --- ;;
 
 ;; --- Programming/Markdown/Serialization Languages Settings --- ;;
@@ -574,15 +660,11 @@
   :no-require t
   :ensure t
   :bind (:map json-mode-map
-              ("C-c b" . json-mode-beautify))
-  :init
-  (add-hook 'before-save-hook '(lambda () (untabify (point-min) (point-max))) t t))
+              ("C-c b" . json-mode-beautify)))
 
 (use-package yaml-mode
   :no-require t
-  :ensure t
-  :config
-  (add-hook 'before-save-hook '(lambda () (untabify (point-min) (point-max))) nil t))
+  :ensure t)
 ;;;
 
 ;;; Elisp
@@ -604,9 +686,8 @@
               ("C-c b" . elisp-format-buffer)))
 
 (use-package elisp-mode
-  :no-require t
-  :config
-  (add-hook 'before-save-hook '(lambda () (untabify (point-min) (point-max))) nil t))
+  :no-require t)
+;;;
 
 ;;; Python
 (use-package virtualenvwrapper
@@ -639,49 +720,77 @@
 
 (use-package python
   :no-require t
-  :hook (python-mode . lsp)
+  :hook ((python-mode . (lambda () (python:setup) (lsp))))
   :commands (python-indent-shift-left python-indent-shift-right)
   :bind (:map python-mode-map
-              ("<tab>" . 'python-indent-shift-right)
-              ("<backtab>" . 'python-indent-shift-left)
-              ("C-c C-p" . 'run-python))
+              ("<tab>" . python-indent-shift-right)
+              ("<backtab>" . python-indent-shift-left)
+              ("C-c C-p" . run-python))
   :custom
   (python-indent-offset 4)
   (python-indent-guess-indent-offset nil)
   (python-indent-guess-indent-offset-verbose nil)
   :init
   (hack-local-variables)
-  (when (executable-find "ipython")
-    (setq-local python-shell-interpreter "ipython")
-    (setq-local python-shell-interpreter-args "-i --simple-prompt"))
   :config
-  (with-eval-after-load "flycheck"
-    (add-to-list 'flycheck-disabled-checkers '(python-mypy))
-    (add-to-list 'flycheck-enabled-checkers '(python-pycompile
-                                              python-pylint
-                                              python-flake8))
-    (setq-local flycheck-checker 'python-flake8)
-    (when (executable-find "flake8")
-      (setq-local flycheck-python-flake8-executable (executable-find "flake8"))
-      (setq flycheck-flake8rc (file-name-directory (expand-file-name ".flake8")))))
+  (defun python:setup ()
+    "Function that setups 'python-mode'."
+    (hack-local-variables)
+    (setq python-shell-interpreter (executable-find "ipython"))
+    (setq python-shell-interpreter-args "-i --simple-prompt")
+    (with-eval-after-load "flycheck"
+      (add-to-list 'flycheck-disabled-checkers '(python-mypy))
+      (add-to-list 'flycheck-enabled-checkers '(python-pycompile
+                                                python-pylint
+                                                python-flake8))
+      (setq-local flycheck-checker 'python-flake8)
+      (when (executable-find "flake8")
+        (setq-local flycheck-python-flake8-executable (executable-find "flake8"))
+        (setq flycheck-flake8rc (file-name-directory (expand-file-name ".flake8"))))))
 
-  (add-hook 'before-save-hook '(lambda () (untabify (point-min) (point-max))) nil t))
+  (defun python:--replace-template-variables (dir-locals-file)
+    "Replace variables from .dir-locals.el file.  DIR-LOCALS-FILE."
+    (with-eval-after-load "virtualenvwrapper"
+      (call-interactively #'venv-workon)
+      (utils:replace-string-in-file dir-locals-file "{{ VENV-NAME }}" venv-current-name)))
+
+  (defun python:init ()
+    "Initialize project for 'python-mode'."
+    (interactive)
+    (let ((dir-locals-file) (project-root))
+      (with-eval-after-load "projectile"
+        (setq project-root (projectile-project-root)))
+      (setq dir-locals-file (concat project-root ".dir-locals.el"))
+      (unless (file-exists-p dir-locals-file)
+        (utils:generate-project-files "python")
+        (python:--replace-template-variables dir-locals-file)
+        (hack-local-variables)
+        (python:setup)))))
 
 (use-package lsp-jedi
-  :load-path "site-lisp")
-
-(use-package elisp-python
   :load-path "site-lisp")
 ;;;
 
 ;;; Javascript/Typescript
-(use-package jest-test-mode
+(use-package js-comint
   :ensure t
   :no-require t
   :bind (:map js2-mode-map
-              ("C-c C-t" . jest-test-debug-run-at-point)
-         :map typescript-mode-map
-              ("C-c C-t". jest-test-debug-run-at-point)))
+              ("C-c C-e" . 'js-send-last-sexp)
+              ("C-c C-b" . 'js-send-buffer)
+              ("C-c C-g" . 'js-send-buffer-and-go))
+  :config
+  (setq js-comint-program-command "node")
+  (setq js-comint-program-arguments '("--interactive"))
+  (defun inferior-js-mode-hook-setup ()
+    (add-hook 'comint-output-filter-functions 'js-comint-process-output))
+  (add-hook 'inferior-js-mode-hook 'inferior-js-mode-hook-setup t))
+
+(use-package jest-test-mode
+  :ensure t
+  :no-require t
+  :bind (:map js2-mode-map ("C-c C-t" . 'jest-test-debug-run-at-point)
+         :map typescript-mode-map ("C-c C-t" . 'jest-test-debug-run-at-point)))
 
 (use-package js2-mode
   :ensure t
@@ -692,16 +801,13 @@
   :config
   (with-eval-after-load "flycheck"
     (add-to-list 'flycheck-enabled-checkers
-                 '(javascript-eslint javascript-jshint javascript-standard)))
-  (add-hook 'before-save-hook '(lambda () (untabify (point-min) (point-max))) t t))
+                 '(javascript-eslint javascript-jshint javascript-standard))))
 
 (use-package js2-jsx-mode
   :no-require t
   :mode ("\\.jsx$" . js2-jsx-mode)
   :hook (js2-jsx-mode . lsp)
-  :after js2-mode
-  :config
-  (add-hook 'before-save-hook '(lambda () (untabify (point-min) (point-max))) t t))
+  :after js2-mode)
 
 (use-package typescript-mode
   :ensure t
@@ -709,12 +815,10 @@
   :mode ((("\\.tsx$" . typescript-mode) ("\\.ts$" . typescript-mode)))
   :hook (typescript-mode . lsp)
   :custom
-  (typescript-indent-level 4)
-  :config
-  (add-hook 'before-save-hook '(lambda () (untabify (point-min) (point-max))) t t))
+  (typescript-indent-level 4))
 ;;;
 
-;;; Bash
+;;; Bash/Shell Scripting
 (use-package company-shell
   :no-require t
   :after company
@@ -725,9 +829,7 @@
 (use-package sh-script
   :no-require t
   :custom
-  (sh-basic-offset 4)
-  :config
-  (add-hook 'before-save-hook '(lambda () (untabify (point-min) (point-max))) nil t))
+  (sh-basic-offset 4))
 ;;;
 
 ;;; C/C++
@@ -752,15 +854,12 @@
   (with-eval-after-load "lsp-clients"
     (setq lsp-clients-clangd-executable "clangd-9"))
   (with-eval-after-load "flycheck"
-    (add-to-list 'flycheck-enabled-checkers '(c/c++-clang c/c++-cppcheck c/c++-gcc)))
-  (add-hook 'before-save-hook '(lambda () (untabify (point-min) (point-max))) nil t))
+    (add-to-list 'flycheck-enabled-checkers '(c/c++-clang c/c++-cppcheck c/c++-gcc))))
 ;;;
 
 ;;; Make
 (use-package make-mode
-  :no-require t
-  :config
-  (add-hook 'before-save-hook '(lambda () (tabify (point-min) (point-max))) nil t))
+  :no-require t)
 
 ;;; Markdown
 (use-package markdown-mode
@@ -771,9 +870,7 @@
          ("\\.md\\'" . markdown-mode)
          ("\\.markdown\\'" . markdown-mode))
   :bind (:map markdown-mode-map
-              ("C-c C-c l" . markdown-live-preview-mode))
-  :config
-  (add-hook 'before-save-hook '(lambda () (untabify (point-min) (point-max))) nil t))
+              ("C-c C-c l" . markdown-live-preview-mode)))
 ;;;
 
 ;;; Rust
@@ -790,14 +887,12 @@
   :hook (rust-mode . lsp)
   :custom
   (rust-indent-offset 4)
-  :init
-  (add-hook 'before-save-hook '(lambda () (untabify (point-min) (point-max))) t t)
   :config
   (with-eval-after-load "flycheck"
     (flycheck-mode +1)
     (flycheck-disable-checker 'lsp)
     (setq-local flycheck-checker 'rust-clippy))
-  (setq-local lsp-rust-all-features t)
+  (setq lsp-rust-all-features t)
   (setq lsp-rust-server 'rust-analyzer))
 ;;;
 
@@ -810,16 +905,12 @@
   (ruby-indent-tabs nil)
   :init
   (with-eval-after-load "lsp-clients"
-    (setq-local lsp-solargraph-use-bundler t))
-  :config
-  (add-hook 'before-save-hook '(lambda () (untabify (point-min) (point-max))) nil t))
+    (setq lsp-solargraph-use-bundler t)))
 ;;;
 
 ;;; SQL
 (use-package sql
-  :no-require t
-  :config
-  (add-hook 'before-save-hook '(lambda () (untabify (point-min) (point-max))) nil t))
+  :no-require t)
 ;;;
 
 ;;; Assembly x86
@@ -843,9 +934,7 @@
   :ensure t
   :no-require t
   :custom
-  (terraform-indent-level 2)
-  :config
-  (add-hook 'before-save-hook '(lambda () (untabify (point-min) (point-max))) nil t))
+  (terraform-indent-level 2))
 ;;;
 
 ;;; Web
@@ -863,9 +952,7 @@
   (web-mode-enable-auto-pairing t)
   (web-mode-enable-auto-closing t)
   (web-mode-enable-current-element-highlight t)
-  (web-mode-enable-current-column-highlight nil)
-  :config
-  (add-hook 'before-save-hook '(lambda () (untabify (point-min) (point-max))) nil t))
+  (web-mode-enable-current-column-highlight nil))
 ;;;
 
 ;;; Dockerfile
