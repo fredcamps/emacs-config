@@ -746,8 +746,6 @@
   (python-indent-offset 4)
   (python-indent-guess-indent-offset nil)
   (python-indent-guess-indent-offset-verbose nil)
-  :init
-  (hack-local-variables)
   :config
   (defun python:--replace-template-variables (dir-locals-file)
     "Replace variables from .dir-locals.el file.  DIR-LOCALS-FILE."
@@ -771,7 +769,7 @@
       (setq flycheck-flake8rc (file-name-directory (expand-file-name ".flake8")))))
 
   (defun python:init ()
-    "Initialize project for 'python-mode'."
+    "Initialize project conf for 'python-mode'."
     (interactive)
     (let ((dir-locals-file) (project-root))
       (with-eval-after-load "projectile"
