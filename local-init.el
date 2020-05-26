@@ -637,7 +637,13 @@
 (use-package realgud
   :ensure t
   :defer t
+  :commands (realgud:ipdb realgud:gdb)
   :no-require t)
+
+(use-package realgud-node-inspect
+  :ensure t
+  :defer t
+  :commands (realgud:node-inspect))
 ;;;
 
 ;; --- ;;
