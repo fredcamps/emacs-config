@@ -228,6 +228,9 @@
 ;;; Move lines
 (use-package move-dup
   :ensure t
+  :no-require t
+  :config
+  (move-dup-mode)
   :bind (("M-p" . md-move-lines-up)
          ("C-M-p" . md-duplicate-up)
          ("M-n" . md-move-lines-down)
