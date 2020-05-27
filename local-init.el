@@ -734,6 +734,10 @@
   :init
   (add-hook 'python-mode-hook
             (lambda () (define-key python-mode-map (kbd "C-c C-t") 'pytest-pdb-one)))
+  :config
+  ;; hacking for suppress Symbol’s value void variable
+  (setq python-shell--interpreter (executable-find "ipython"))
+  (setq python-shell--interpreter-args "-i --simple-prompt")
   :custom
   (pytest-project-root-files '(".projectile" "pyproject.toml" ".dir-locals.el"))
   (pytest-cmd-format-string "cd '%s' ; and %s %s '%s'"))
@@ -747,6 +751,7 @@
               ("<backtab>" . python-indent-shift-left)
               ("C-c C-p" . run-python))
   :custom
+  (python-shell-completion-native-enable t)
   (python-indent-offset 4)
   (python-indent-guess-indent-offset nil)
   (python-indent-guess-indent-offset-verbose nil)
