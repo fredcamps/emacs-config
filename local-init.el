@@ -295,8 +295,9 @@
   :no-require t
   :hook (prog-mode . flycheck-mode)
   :custom
-  (flycheck-indication-mode 'left-margin)
+  (flycheck-checker-error-threshold 2000)
   (flycheck-highlighting-mode 'lines)
+  (flycheck-indication-mode 'left-margin)
   (flycheck-idle-change-delay 2)
   (flycheck-check-syntax-automatically '(mode-enabled
                                          save
@@ -388,9 +389,12 @@
 ;;; git support
 (use-package git-gutter
   :no-require t
+  :ensure t
+  :custom
+  (git-gutter:handled-backends '(git hg bzr svn))
+  (git-gutter:hide-gutter t)
   :config
-  (global-git-gutter-mode +1)
-  :ensure t)
+  (global-git-gutter-mode +1))
 
 (use-package magit
   :ensure t
@@ -736,7 +740,7 @@
 
 (use-package python
   :no-require t
-  :hook ((python-mode . (lambda () (lsp) (python:setup) )))
+  :hook ((python-mode . (lambda () (python:setup)   (lsp) )))
   :commands (python-indent-shift-left python-indent-shift-right)
   :bind (:map python-mode-map
               ("<tab>" . python-indent-shift-right)
