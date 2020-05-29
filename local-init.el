@@ -301,7 +301,7 @@
   (flycheck-checker-error-threshold 2000)
   (flycheck-highlighting-mode 'lines)
   (flycheck-indication-mode 'left-margin)
-  (flycheck-idle-change-delay 2)
+  (flycheck-idle-change-delay 1)
   (flycheck-check-syntax-automatically '(mode-enabled
                                          save
                                          idle-change
@@ -612,25 +612,20 @@
   :ensure t
   :no-require t
   :init
-  (setq eir-repl-placement 'left)
+  (setq eir-repl-placement 'right)
   (setq eir-ielm-eval-in-current-buffer t)
-  (defun eval-in-js ()
-    (eir-eval-in-javascript))
-  (defun eval-in-python ()
-    (eir-eval-in-python)
-    (python-shell-switch-to-shell))
   (add-hook 'sh-mode-hook
-            '(lambda() (local-set-key (kbd "C-c C-c") 'eir-eval-in-shell)))
+            '(lambda() (local-set-key (kbd "C-c C-c") 'eir-eval-in-bash)))
   (add-hook 'js2-mode-hook
-            '(lambda () (local-set-key (kbd "C-c C-c") 'eval-in-js)))
+            '(lambda () (local-set-key (kbd "C-c C-c") 'eir-eval-in-javascript)))
   (add-hook 'python-mode-hook
-            '(lambda () (local-set-key (kbd "C-c C-c") 'eval-in-python))))
+            '(lambda () (local-set-key (kbd "C-c C-c") 'eir-eval-in-python))))
 ;;;
 
 ;;; easy compile and run
 (use-package quickrun
   :ensure t
-  :bind (:map prog-mode-map ("C-x r" . quickrun))
+  :bind (:map prog-mode-map ("C-c e" . quickrun))
   :no-require t)
 ;;;
 
@@ -771,7 +766,7 @@
     (hack-local-variables)
     (setq python-shell-interpreter (executable-find "ipython"))
     (setq python-shell-interpreter-args "-i --simple-prompt")
-    (setq flycheck-disabled-checkers '(python-mypy))
+    ;; (setq flycheck-disabled-checkers '(python-mypy))
     (setq flycheck-enabled-checkers '(python-pycompile
                                       python-pylint
                                       python-flake8))
