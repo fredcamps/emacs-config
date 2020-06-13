@@ -473,15 +473,6 @@
   (httpd-port 54322))
 ;;;
 
-;;; Highlight exceeded columns limit
-(use-package column-enforce-mode
-  :ensure t
-  :no-require t
-  :hook (prog-mode . column-enforce-mode)
-  :custom
-  (column-enforce-column 100))
-;;;
-
 ;;; Indent guide line
 (use-package indent-guide
   :no-require t
