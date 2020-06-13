@@ -28,23 +28,6 @@
           (bury-buffer)
         (kill-buffer (buffer-name current-buffer))))))
 
-(defun utils:indent-region (N)
-  "Indent region N."
-  (interactive "p")
-  (if (use-region-p)
-      (progn (indent-rigidly (region-beginning) (region-end) (* N 4))
-             (setq deactivate-mark nil))
-    (self-insert-command N)))
-
-(defun utils:unindent-region (N)
-  "Unindent region N."
-
-  (interactive "p")
-  (if (use-region-p)
-      (progn (indent-rigidly (region-beginning) (region-end) (* N -4))
-             (setq deactivate-mark nil))
-    (self-insert-command N)))
-
 (defun utils:get-file-contents(fpath)
   "Return the contents of a file as a string.  FPATH."
 
