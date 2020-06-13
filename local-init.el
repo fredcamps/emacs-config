@@ -280,7 +280,7 @@
   (global-set-key (kbd "<f2> u") 'counsel-unicode-char)
   (global-set-key (kbd "C-c g") 'counsel-git)
   (global-set-key (kbd "C-c j") 'counsel-git-grep)
-  (global-set-key (kbd "C-c k") 'counsel-ag)
+  ;;  (global-set-key (kbd "C-c C-k") 'counsel-ag)
   (global-set-key (kbd "C-x l") 'counsel-locate)
   (global-set-key (kbd "C-S-o") 'counsel-rhythmbox)
   (define-key minibuffer-local-map (kbd "C-r") 'counsel-minibuffer-history))
@@ -389,6 +389,26 @@
   :after yasnippet)
 ;;;
 
+;;;Debuggers
+(use-package realgud
+  :ensure t
+  :no-require t
+  :commands (realgud:pdb realgud:pdb-remote realgud:gdb))
+
+(use-package realgud-trepan-ni ;;js/ts debugger
+  :ensure t
+  :no-require t
+  :commands (realgud:trepan-ni)
+  :hook ((typescript-mode . (lambda ()
+                             (setq realgud:trepan-ni-command-name
+                                   "trepan-ni --require ts-node/register ")))
+         (js2-mode . (lambda ()
+                       (setq realgud:trepan-ni-command-name "trepan-ni ")))
+
+         (js2-jsx-mode . (lambda ()
+                           (setq realgud:trepan-ni-command-name "trepan-ni ")))))
+;;;
+
 ;;; git support
 (use-package git-gutter
   :no-require t
@@ -409,6 +429,14 @@
   :defer t
   :no-require t)
 ;;;
+
+;;; Search ripgrep
+(use-package rg
+  :ensure t
+  :defer t
+  :no-require t
+  :config
+  (rg-enable-default-bindings))
 
 ;;; Occur and folding
 (use-package loccur
@@ -550,6 +578,15 @@
   (xclip-mode +1))
 ;;;
 
+;;; keybindings discoverable
+(use-package which-key
+  :ensure t
+  :no-require t
+  :config
+  (which-key-mode))
+;;;
+
+
 ;;; Generic code jumping
 (use-package dumb-jump
   :ensure t
@@ -562,7 +599,7 @@
          ("M-g z" . dumb-jump-go-prefer-external-other-window))
   :init
   (setq dumb-jump-selector 'ivy)
-  (setq dumb-jump-force-searcher 'ag))
+  (setq dumb-jump-force-searcher 'rg))
 ;;;
 
 ;;; Language server protocol
@@ -636,23 +673,7 @@
   :no-require t)
 ;;;
 
-;;; debugger
-(use-package realgud
-  :ensure t
-  :bind (:map python-mode-map
-              ("C-x d" . realgud:node-inspect)
-         :map cc-mode-map
-              ("C-x d" . realgud:gdb)
-         :map rust-mode-map
-              ("C-x d" . realgud:gdb))
-  :commands (realgud:pdb realgud:gdb)
-  :no-require t)
 
-(use-package realgud-node-inspect
-  :ensure t
-  :bind (:map js2-mode-map ("C-x d" . realgud:node-inspect))
-  :commands (realgud:node-inspect))
-;;;
 
 ;; --- ;;
 
@@ -807,6 +828,21 @@
     (add-hook 'comint-output-filter-functions 'js-comint-process-output))
   (add-hook 'inferior-js-mode-hook 'inferior-js-mode-hook-setup t))
 
+(use-package ts-comint
+  :ensure t
+  :no-require t
+  :bind (:map typescript-mode-map
+              ("C-c C-e" . 'ts-send-last-sexp)
+              ("C-c C-b" . 'ts-send-buffer)
+              ("C-c C-g" . 'ts-send-buffer-and-go)))
+
+(use-package add-node-modules-path
+  :ensure t
+  :no-require t
+  :hook ((js2-jsx-mode . add-node-modules-path)
+         (js2-mode . add-node-modules-path)
+         (typescript-mode . add-node-modules-path)))
+
 (use-package jest-test-mode
   :ensure t
   :no-require t
@@ -818,10 +854,11 @@
   :no-require t
   :mode ("\\.js$" . js2-mode)
   :interpreter "node"
-  :hook (javascript-mode . lsp)
+  :hook (js2-mode . lsp)
   :config
+  (setq flycheck-disabled-checkers '(javascript-jshint))
   (setq flycheck-enabled-checkers
-        '(javascript-eslint javascript-jshint javascript-standard)))
+        '(javascript-eslint javascript-standard)))
 
 (use-package js2-jsx-mode
   :no-require t
@@ -835,7 +872,11 @@
   :mode ((("\\.tsx$" . typescript-mode) ("\\.ts$" . typescript-mode)))
   :hook (typescript-mode . lsp)
   :custom
-  (typescript-indent-level 4))
+  (typescript-indent-level 2)
+  :config
+  (setq flycheck-disabled-checkers '(javascript-jshint))
+  (setq flycheck-enabled-checkers
+        '(javascript-eslint)))
 ;;;
 
 ;;; Bash/Shell Scripting
