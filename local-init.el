@@ -586,7 +586,6 @@
   (which-key-mode))
 ;;;
 
-
 ;;; Generic code jumping
 (use-package dumb-jump
   :ensure t
