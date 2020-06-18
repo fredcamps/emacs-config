@@ -616,7 +616,10 @@
   :init
   (eldoc-mode)
   :config
-  (add-to-list 'lsp-disabled-clients 'pyls)
+  (define-key lsp-signature-mode-map (kbd "M-n") nil)
+  (define-key lsp-signature-mode-map (kbd "M-p") nil)
+  (define-key lsp-signature-mode-map (kbd "M-a") nil)
+
   (define-key lsp-mode-map (kbd "M-.") #'lsp-find-definition)
   (define-key lsp-mode-map (kbd "M-,") #'xref-pop-marker-stack)
   (define-key lsp-mode-map (kbd "C-c ,") #'xref-pop-marker-stack)
@@ -800,7 +803,11 @@
         (python:setup)))))
 
 (use-package lsp-jedi
-  :load-path "site-lisp")
+  :ensure t
+  :config
+  (with-eval-after-load "lsp-mode"
+    (add-to-list 'lsp-disabled-clients 'pyls)
+    (add-to-list 'lsp-enabled-clients 'jedi)))
 ;;;
 
 ;;; Javascript/Typescript
