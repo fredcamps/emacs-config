@@ -787,7 +787,10 @@
     (when (executable-find "flake8")
       (setq-local flycheck-checker 'python-flake8)
       (setq-local flycheck-python-flake8-executable (executable-find "flake8"))
-      (setq flycheck-flake8rc (file-name-directory (expand-file-name ".flake8")))))
+      (let ((project-root))
+        (projectile-project-info)
+        (setq project-root (projectile-project-root))
+        (setq flycheck-flake8rc (concat project-root ".flake8")))))
 
   (defun python:init ()
     "Initialize project conf for 'python-mode'."
