@@ -910,11 +910,11 @@
   (c-basic-offset 4)
   (c-tab-always-indent t)
   :config
-  (with-eval-after-load "company-clang"
-    (setq company-clang-executable "clang-9"))
-  (with-eval-after-load "lsp-clients"
-    (setq lsp-clients-clangd-executable "clangd-9"))
+  (setq company-clang-executable "clang-9")
+  (setq lsp-clients-clangd-executable "clangd-9")
+  (add-to-list 'lsp-enabled-clients 'clangd)
   (setq flycheck-enabled-checkers '(c/c++-clang c/c++-cppcheck c/c++-gcc)))
+
 ;;;
 
 ;;; Make
