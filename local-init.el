@@ -156,7 +156,7 @@
 (global-set-key (kbd "C-x +") 'enlarge-window)
 (global-set-key (kbd "M-/") 'hippie-expand)
 (global-set-key (kbd "RET") 'newline-and-indent)
-(global-set-key (kbd "C-x t") #'ansi-term)
+;; (global-set-key (kbd "C-x t") #'ansi-term)
 (global-set-key (kbd "M-.") #'xref-find-definitions)
 (global-set-key (kbd "M-,") #'xref-pop-marker-stack)
 (global-set-key (kbd "C-x 4 ,") #'xref-find-definitions-other-window)
@@ -252,6 +252,16 @@
   (auto-compile-on-load-mode t)
   (auto-compile-on-save-mode t))
 ;;;
+
+;;; Get shell environment variables
+(use-package exec-path-from-shell
+  :ensure t
+  :no-require t
+  :config
+  (when (memq window-system '(mac ns x))
+    (exec-path-from-shell-copy-env "WORKON_HOME")
+    (exec-path-from-shell-initialize)))
+
 
 ;;; Better than IDO
 (use-package counsel
@@ -545,8 +555,8 @@
   (doom-themes-visual-bell-config)
 
   ;; Treemacs theme
-  ;; (setq doom-themes-treemacs-theme "doom-colors") ;; use the colorful treemacs theme
-  ;; (doom-themes-treemacs-config)
+  (setq doom-themes-treemacs-theme "doom-colors") ;; use the colorful treemacs theme
+  (doom-themes-treemacs-config)
 
   ;; Corrects (and improves) org-mode's native fontification.
   (doom-themes-org-config)
@@ -652,6 +662,13 @@
   (add-hook 'python-mode-hook
             '(lambda () (local-set-key (kbd "C-c C-c") 'eir-eval-in-python))))
 ;;;
+
+;;; terminal emulator better than built-in
+(use-package multi-vterm
+  :ensure t
+  :no-require t
+  :config
+  (global-set-key (kbd "C-x t") 'multi-vterm))
 
 ;;; easy compile and run
 (use-package quickrun
