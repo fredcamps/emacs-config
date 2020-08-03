@@ -805,7 +805,7 @@
       (setq-local flycheck-checker 'python-flake8)
       (setq-local flycheck-python-flake8-executable (executable-find "flake8"))
       (let ((project-root))
-        (projectile-project-info)
+        (projectile-mode +1)
         (setq project-root (projectile-project-root))
         (setq flycheck-flake8rc (concat project-root ".flake8")))))
 
