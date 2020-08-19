@@ -130,6 +130,7 @@
 (transient-mark-mode t)
 (menu-bar-mode -1)
 (tool-bar-mode -1)
+(toggle-scroll-bar -1)
 (display-time-mode -1)
 (display-battery-mode -1)
 (global-display-line-numbers-mode t)
@@ -695,7 +696,7 @@
   :commands (utils:smart-tabify utils:replace-string-in-file utils:generate-project-files)
   :bind (("C-c SPC" . utils:toggle-invisibles)
          ("C-c k" . utils:kill-all-buffers)
-         ("C-c n" . utils:new-buffer-frame))
+         ("C-c n" . utils:new-buffer))
   :config
   (add-hook 'before-save-hook 'utils:smart-tabify t t))
 ;; --- ;;
