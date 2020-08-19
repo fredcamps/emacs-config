@@ -48,8 +48,15 @@
       (whitespace-mode)
       (setq utils:fl-blankspace -1))))
 
-(defun utils:new-buffer-frame ()
-  "Create a new frame with a new empty buffer."
+(defun utils:new-buffer ()
+  "Create a new empty buffer."
+  (interactive)
+  (let ((buffer (generate-new-buffer "*Untitled*")))
+    (switch-to-buffer buffer)
+    (setq initial-major-mode (quote text-mode))))
+
+(defun utils:new-frame ()
+  "Create a new frame with empty buffer."
   (interactive)
   (let ((buffer (generate-new-buffer "*Untitled*")))
     (set-buffer-major-mode buffer)
