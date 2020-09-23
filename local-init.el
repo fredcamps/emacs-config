@@ -573,12 +573,12 @@
 ;;;
 
 ;;; Clipboard sharing
-(use-package xclip
-  :ensure t
-  :pin gnu
-  :no-require t
-  :config
-  (xclip-mode +1))
+;; (use-package xclip
+;;   :ensure t
+;;   :pin gnu
+;;   :no-require t
+;;   :config
+;;   (xclip-mode +1))
 ;;;
 
 ;;; keybindings discoverable
@@ -669,6 +669,7 @@
   :ensure t
   :no-require t
   :config
+  (setq vterm-always-compile-module t)
   (global-set-key (kbd "C-x t") 'multi-vterm))
 
 ;;; easy compile and run
