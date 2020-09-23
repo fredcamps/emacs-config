@@ -41,3 +41,7 @@ ede-projects.el
 
 # Remove recent buffer files
 recentf
+
+# vterm files
+session.*
+.terminfo
