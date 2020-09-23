@@ -996,6 +996,12 @@
   (nasm-basic-offset 4))
 ;;;
 
+;;; Fish shell
+(use-package fish-mode
+  :ensure t
+  :no-require t
+  :defer t)
+
 ;;; Terraform
 (use-package company-terraform
   :ensure t
