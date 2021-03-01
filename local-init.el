@@ -189,6 +189,9 @@
           (function (lambda ()
                       (set-buffer-process-coding-system 'utf-8-unix 'utf-8-unix))))
 
+(add-hook 'ein:notebook-multilang-mode-hook
+          #'(lambda () (spacemacs/toggle-whitespace-cleanup-off)))
+
 (add-hook 'before-save-hook 'delete-trailing-whitespace t)
 (add-hook 'emacs-lisp-mode-hook 'turn-on-eldoc-mode t)
 (add-hook 'lisp-interaction-mode-hook 'turn-on-eldoc-mode t)
@@ -687,7 +690,6 @@
 ;;;
 
 
-
 ;; --- ;;
 
 ;; --- My Custom utilities --- ;;
@@ -719,8 +721,9 @@
 (use-package elisp-slime-nav
   :no-require t
   :ensure t
-  :hook ((emacs-lisp-mode-hook . elisp-slime-nav-mode)
-         (ielm-mode-hook . elisp-slime-nav-mode)))
+  :config
+  (add-hook 'emacs-lisp-mode-hook 'turn-on-elisp-slime-nav-mode)
+  (add-hook 'ielm-mode-hook 'turn-on-elisp-slime-nav-mode))
 
 (use-package package-lint
   :no-require t
@@ -829,6 +832,9 @@
   (with-eval-after-load "lsp-mode"
     (add-to-list 'lsp-disabled-clients 'pyls)
     (add-to-list 'lsp-enabled-clients 'jedi)))
+
+(use-package ein
+  :ensure t)
 ;;;
 
 ;;; Javascript/Typescript
@@ -1057,6 +1063,13 @@
   :ensure t
   :defer t
   :no-require t)
+;;;
+
+;;; Local local environment variables
+(use-package envrc
+ :ensure t
+ :config
+ (envrc-global-mode))
 ;;;
 
 ;; --- ;;
