@@ -3,4 +3,4 @@
 # key: rpdb
 # binding: C-c C-b r
 # --
-from remote_pdb import set_trace; set_trace(addr='0.0.0.0', port=4444)
+from remote_pdb import RemotePdb; RemotePdb('0.0.0.0', 4444).set_trace()
