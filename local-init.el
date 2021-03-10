@@ -346,7 +346,7 @@
   :init
   (global-company-mode)
   :custom
-  (company-idle-delay 0.5)
+  (company-idle-delay 0)
   (company-transformers nil)
   (company-minimum-prefix-length 3)
   :config
@@ -365,6 +365,9 @@
   :config
   (setq company-dict-dir (concat user-emacs-directory "dict"))
   (add-to-list 'company-backends 'company-dict))
+
+(use-package company-tabnine
+  :ensure t)
 ;;;
 
 ;;; Project management support
