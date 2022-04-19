@@ -393,11 +393,11 @@
     (setq snippets-dir (concat user-emacs-directory "snippets"))
     (setq yas-snippet-dirs (list snippets-dir))))
 
-(use-package yasnippet-snippets
-  :no-require t
-  :ensure t
-  :defer t
-  :after yasnippet)
+;; (use-package yasnippet-snippets
+;;   :no-require t
+;;   :ensure t
+;;   :defer t
+;;   :after yasnippet)
 ;;;
 
 ;;;Debuggers
@@ -636,17 +636,6 @@
   (define-key lsp-mode-map (kbd "M-,") #'xref-pop-marker-stack)
   (define-key lsp-mode-map (kbd "C-c ,") #'xref-pop-marker-stack)
   (define-key lsp-mode-map (kbd "C-x 4 .") #'xref-find-definitions-other-window))
-
-(use-package company-lsp
-  :ensure t
-  :no-require t
-  :defer t
-  :config
-  (add-to-list 'company-backends 'company-lsp)
-  (setq company-lsp-enable-snippet t
-        company-lsp-enable-recompletion t
-        company-lsp-async t
-        company-lsp-cache-candidates nil))
 ;;;
 
 ;;; better than built-in python-shell-send
