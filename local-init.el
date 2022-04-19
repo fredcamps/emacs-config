@@ -189,6 +189,9 @@
           (function (lambda ()
                       (set-buffer-process-coding-system 'utf-8-unix 'utf-8-unix))))
 
+(add-hook 'ein:notebook-multilang-mode-hook
+          #'(lambda () (spacemacs/toggle-whitespace-cleanup-off)))
+
 (add-hook 'before-save-hook 'delete-trailing-whitespace t)
 (add-hook 'emacs-lisp-mode-hook 'turn-on-eldoc-mode t)
 (add-hook 'lisp-interaction-mode-hook 'turn-on-eldoc-mode t)
@@ -343,7 +346,7 @@
   :init
   (global-company-mode)
   :custom
-  (company-idle-delay 0.5)
+  (company-idle-delay 0)
   (company-transformers nil)
   (company-minimum-prefix-length 3)
   :config
@@ -362,6 +365,9 @@
   :config
   (setq company-dict-dir (concat user-emacs-directory "dict"))
   (add-to-list 'company-backends 'company-dict))
+
+(use-package company-tabnine
+  :ensure t)
 ;;;
 
 ;;; Project management support
@@ -573,12 +579,12 @@
 ;;;
 
 ;;; Clipboard sharing
-(use-package xclip
-  :ensure t
-  :pin gnu
-  :no-require t
-  :config
-  (xclip-mode +1))
+;; (use-package xclip
+;;   :ensure t
+;;   :pin gnu
+;;   :no-require t
+;;   :config
+;;   (xclip-mode +1))
 ;;;
 
 ;;; keybindings discoverable
@@ -658,6 +664,7 @@
   :ensure t
   :no-require t
   :config
+  (setq vterm-always-compile-module t)
   (global-set-key (kbd "C-x t") 'multi-vterm))
 
 ;;; easy compile and run
@@ -673,7 +680,6 @@
   :defer t
   :no-require t)
 ;;;
-
 
 
 ;; --- ;;
@@ -707,8 +713,9 @@
 (use-package elisp-slime-nav
   :no-require t
   :ensure t
-  :hook ((emacs-lisp-mode-hook . elisp-slime-nav-mode)
-         (ielm-mode-hook . elisp-slime-nav-mode)))
+  :config
+  (add-hook 'emacs-lisp-mode-hook 'turn-on-elisp-slime-nav-mode)
+  (add-hook 'ielm-mode-hook 'turn-on-elisp-slime-nav-mode))
 
 (use-package package-lint
   :no-require t
@@ -817,6 +824,9 @@
   (with-eval-after-load "lsp-mode"
     (add-to-list 'lsp-disabled-clients 'pyls)
     (add-to-list 'lsp-enabled-clients 'jedi)))
+
+(use-package ein
+  :ensure t)
 ;;;
 
 ;;; Javascript/Typescript
@@ -984,6 +994,12 @@
   (nasm-basic-offset 4))
 ;;;
 
+;;; Fish shell
+(use-package fish-mode
+  :ensure t
+  :no-require t
+  :defer t)
+
 ;;; Terraform
 (use-package company-terraform
   :ensure t
@@ -1039,6 +1055,13 @@
   :ensure t
   :defer t
   :no-require t)
+;;;
+
+;;; Local local environment variables
+(use-package envrc
+ :ensure t
+ :config
+ (envrc-global-mode))
 ;;;
 
 ;; --- ;;

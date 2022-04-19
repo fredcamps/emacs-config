@@ -4,6 +4,7 @@ dict
 el-get
 elpa
 eshell
+request/
 tmp
 transient
 url/
@@ -41,3 +42,7 @@ ede-projects.el
 
 # Remove recent buffer files
 recentf
+
+# vterm files
+session.*
+.terminfo
