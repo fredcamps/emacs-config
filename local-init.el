@@ -624,6 +624,7 @@
   (lsp-enable-folding nil)
   (lsp-print-performance t)
   (lsp-enable-indentation t)
+  (lsp-completion-enable t)
   (lsp-enable-xref t)
   (lsp-enable-snippet t)
   (lsp-keep-workspace-alive nil)
