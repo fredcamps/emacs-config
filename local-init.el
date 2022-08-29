@@ -521,7 +521,9 @@
   :custom
   (doom-modeline-height 25)
   (doom-modeline-bar-width 3)
-  (doom-modeline-project-detection 'projectile)
+  (when (boundp 'projectile-project-root)
+    (doom-modeline-project-detection 'projectile))
+
   (doom-modeline-window-width-limit fill-column)
   (doom-modeline-buffer-file-name-style 'relative-from-project)
   (doom-modeline-icon (display-graphic-p))
@@ -793,31 +795,37 @@
   (defun python:setup ()
     "Function that setups 'python-mode'."
     (hack-local-variables)
-    (setq python-shell-interpreter (executable-find "ipython"))
-    (setq python-shell-interpreter-args "-i --simple-prompt")
-    ;; (setq flycheck-disabled-checkers '(python-mypy))
-    (setq flycheck-enabled-checkers '(python-pycompile
-                                      python-pylint
-                                      python-flake8))
+    (setq flycheck-python-pycompile-executable "python3")
+    (setq flycheck-enabled-checkers '(python-pycompile))
+    (if (executable-find "ipython")
+        (setq python-shell-interpreter (executable-find "ipython"))
+      (setq python-shell-interpreter-args "-i --simple-prompt"))
+
     (when (executable-find "flake8")
+      ;; (setq flycheck-disabled-checkers '(python-mypy))
+      (setq flycheck-enabled-checkers '(python-pycompile
+                                        python-pylint
+                                        python-flake8))
+
       (setq-local flycheck-checker 'python-flake8)
       (setq-local flycheck-python-flake8-executable (executable-find "flake8"))
       (let ((project-root))
         (projectile-mode +1)
-        (setq project-root (projectile-project-root))
-        (setq flycheck-flake8rc (concat project-root ".flake8")))))
+        (with-eval-after-load "projectile"
+          (setq project-root projectile-project-root)
+          (setq flycheck-flake8rc (concat project-root ".flake8"))))))
 
   (defun python:init ()
     "Initialize project conf for 'python-mode'."
     (interactive)
     (let ((dir-locals-file) (project-root))
       (with-eval-after-load "projectile"
-        (setq project-root (projectile-project-root)))
-      (setq dir-locals-file (concat project-root ".dir-locals.el"))
-      (unless (file-exists-p dir-locals-file)
+        (setq project-root projectile-project-root)
+        (setq dir-locals-file (concat project-root ".dir-locals.el"))
+        (unless (file-exists-p dir-locals-file)
         (utils:generate-project-files "python")
         (python:--replace-template-variables dir-locals-file)
-        (python:setup)))))
+        (python:setup))))))
 
 (use-package lsp-jedi
   :ensure t
@@ -898,11 +906,12 @@
 
 ;;; Bash/Shell Scripting
 (use-package company-shell
+  :ensure t
   :no-require t
   :after company
   :hook sh-mode
   :config
-  (add-to-list 'company-backends 'company-shell))
+  (add-to-list 'company-backends '(company-shell company-shell-env company-fish-shell)))
 
 (use-package sh-script
   :no-require t
