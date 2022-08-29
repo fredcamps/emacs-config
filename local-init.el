@@ -759,6 +759,27 @@
   :no-require t)
 ;;;
 
+
+;;; Go
+;; Go - lsp-mode
+;; Set up before-save hooks to format buffer and add/delete imports.
+(defun lsp-go-install-save-hooks ()
+  (add-hook 'before-save-hook #'lsp-format-buffer t t)
+  (add-hook 'before-save-hook #'lsp-organize-imports t t))
+(add-hook 'go-mode-hook #'lsp-go-install-save-hooks)
+
+;; Start LSP Mode
+(add-hook 'go-mode-hook #'lsp-deferred)
+;;;
+
+
+;;; java
+(use-package lsp-java
+  :no-require t
+  :ensure t)
+;;;
+
+
 ;;; Python
 (use-package virtualenvwrapper
   :no-require t
@@ -794,7 +815,7 @@
 
 (use-package python
   :no-require t
-  :hook ((python-mode . (lambda () (python:setup)   (lsp) )))
+  :hook ((python-mode . (lambda () (python:setup) (lsp-deferred) (setq lsp-diagnostics-provider :none))))
   :commands (python-indent-shift-left python-indent-shift-right)
   :bind (:map python-mode-map
               ("<tab>" . python-indent-shift-right)
