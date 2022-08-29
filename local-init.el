@@ -580,13 +580,25 @@
   (set-face-attribute 'show-paren-mismatch nil :foreground "red" :foreground "#000"))
 ;;;
 
+
+;;; Show Icons
+(use-package all-the-icons
+  :ensure t
+  :if (display-graphic-p))
+
+(use-package icons-in-terminal
+  :ensure t
+  :unless (display-graphic-p))
+;;;
+
 ;;; Clipboard sharing
-;; (use-package xclip
-;;   :ensure t
-;;   :pin gnu
-;;   :no-require t
-;;   :config
-;;   (xclip-mode +1))
+(use-package xclip
+  :ensure t
+  :unless (display-graphic-p)
+  :pin gnu
+  :no-require t
+  :config
+  (xclip-mode +1))
 ;;;
 
 ;;; keybindings discoverable
@@ -682,6 +694,13 @@
   :ensure t
   :defer t
   :no-require t)
+;;;
+
+;;; Local local environment variables
+(use-package envrc
+ :ensure t
+ :config
+ (envrc-global-mode))
 ;;;
 
 
@@ -1066,14 +1085,6 @@
   :defer t
   :no-require t)
 ;;;
-
-;;; Local local environment variables
-(use-package envrc
- :ensure t
- :config
- (envrc-global-mode))
-;;;
-
 ;; --- ;;
 
 (provide 'local-init)
