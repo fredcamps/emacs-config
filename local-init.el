@@ -586,9 +586,9 @@
   :ensure t
   :if (display-graphic-p))
 
-(use-package icons-in-terminal
-  :ensure t
-  :unless (display-graphic-p))
+;; (use-package icons-in-terminal
+;;   :ensure t
+;;   :unless (display-graphic-p))
 ;;;
 
 ;;; Clipboard sharing
@@ -644,7 +644,8 @@
   (lsp-keep-workspace-alive nil)
   (lsp-enable-completion-at-point -1)
   (lsp-enable-on-type-formatting t)
-  (lsp-diagnostic-package :none)
+  (lsp-diagnostics-provider :flycheck)
+  (lsp-diagnostics-flycheck-default-level 'warning)
   (lsp-restart 'auto-restart)
   :init
   (eldoc-mode)
