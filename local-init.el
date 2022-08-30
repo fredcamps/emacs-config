@@ -190,7 +190,7 @@
                       (set-buffer-process-coding-system 'utf-8-unix 'utf-8-unix))))
 
 (add-hook 'ein:notebook-multilang-mode-hook
-          #'(lambda () (spacemacs/toggle-whitespace-cleanup-off)))
+          (lambda () (spacemacs/toggle-whitespace-cleanup-off)))
 
 (add-hook 'before-save-hook 'delete-trailing-whitespace t)
 (add-hook 'emacs-lisp-mode-hook 'turn-on-eldoc-mode t)
@@ -199,16 +199,16 @@
 ;;;
 
 ;;; Perfomance hooks
-(add-hook 'minibuffer-setup-hook #'(lambda() (setq gc-cons-threshold most-positive-fixnum)))
-(add-hook 'minibuffer-exit-hook #'(lambda() (setq gc-cons-threshold 800000)))
+(add-hook 'minibuffer-setup-hook (lambda() (setq gc-cons-threshold most-positive-fixnum)))
+(add-hook 'minibuffer-exit-hook (lambda() (setq gc-cons-threshold 800000)))
 ;;;
 
 ;;; Indentation hooks
-(add-hook 'make-file-mode-hook '(lambda()
+(add-hook 'make-file-mode-hook (lambda()
                                   (setq-local tab-width 4)
                                   (setq-local indent-tabs-mode t)) t t)
-(add-hook 'markdown-mode-hook '(lambda() (setq-local tab-width 4)) t t)
-(add-hook 'sql-mode-hook '(lambda() (setq-local tab-width 4)) t t)
+(add-hook 'markdown-mode-hook (lambda() (setq-local tab-width 4)) t t)
+(add-hook 'sql-mode-hook (lambda() (setq-local tab-width 4)) t t)
 ;;;
 ;; --- ;;
 
@@ -314,7 +314,7 @@
   :custom
   (flycheck-checker-error-threshold 2000)
   (flycheck-highlighting-mode 'lines)
-  (flycheck-indication-mode 'left-margin)
+  (flycheck-indication-mode 'left-fringe)
   (flycheck-idle-change-delay 1)
   (flycheck-check-syntax-automatically '(mode-enabled
                                          save
@@ -649,6 +649,7 @@
   (lsp-restart 'auto-restart)
   :init
   (eldoc-mode)
+  (lsp-diagnostics-mode)
   :config
   (define-key lsp-signature-mode-map (kbd "M-n") nil)
   (define-key lsp-signature-mode-map (kbd "M-p") nil)
@@ -668,11 +669,11 @@
   (setq eir-repl-placement 'right)
   (setq eir-ielm-eval-in-current-buffer t)
   (add-hook 'sh-mode-hook
-            '(lambda() (local-set-key (kbd "C-c C-c") 'eir-eval-in-bash)))
+            (lambda() (local-set-key (kbd "C-c C-c") 'eir-eval-in-bash)))
   (add-hook 'js2-mode-hook
-            '(lambda () (local-set-key (kbd "C-c C-c") 'eir-eval-in-javascript)))
+            (lambda () (local-set-key (kbd "C-c C-c") 'eir-eval-in-javascript)))
   (add-hook 'python-mode-hook
-            '(lambda () (local-set-key (kbd "C-c C-c") 'eir-eval-in-python))))
+            (lambda () (local-set-key (kbd "C-c C-c") 'eir-eval-in-python))))
 ;;;
 
 ;;; terminal emulator better than built-in
@@ -815,7 +816,7 @@
 
 (use-package python
   :no-require t
-  :hook ((python-mode . (lambda () (python:setup) (lsp-deferred) (setq lsp-diagnostics-provider :none))))
+  :hook ((python-mode . (lambda () (python:setup) (lsp-deferred))))
   :commands (python-indent-shift-left python-indent-shift-right)
   :bind (:map python-mode-map
               ("<tab>" . python-indent-shift-right)
@@ -854,7 +855,8 @@
         (projectile-mode +1)
         (with-eval-after-load "projectile"
           (setq project-root projectile-project-root)
-          (setq flycheck-flake8rc (concat project-root ".flake8"))))))
+          (setq flycheck-flake8rc (concat project-root ".flake8")))))
+    ((setq lsp-diagnostics-mode -1)))
 
   (defun python:init ()
     "Initialize project conf for 'python-mode'."
@@ -1008,16 +1010,20 @@
   :config
   (add-hook 'flycheck-mode-hook #'flycheck-rust-setup))
 
-(use-package rust-mode
+(use-package rustic
   :ensure t
   :no-require t
   :hook (rust-mode . lsp)
   :custom
   (rust-indent-offset 4)
   :config
-  (setq-local flycheck-checker 'rust-clippy)
-  (setq lsp-rust-all-features t)
-  (setq lsp-rust-server 'rust-analyzer))
+  (push 'rustic-clippy flycheck-checkers))
+
+(use-package cargo-mode
+  :ensure t
+  :config
+  (setq compilation-scroll-output t)
+  (add-hook 'rust-mode-hook 'cargo-minor-mode))
 ;;;
 
 ;;; Ruby
