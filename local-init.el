@@ -213,6 +213,9 @@
 ;; --- ;;
 
 ;; --- Extensions settings --- ;;
+(use-package use-package-ensure-system-package
+  :ensure t)
+
 ;;; Profile Emacs startup
 (use-package esup
   :ensure t
@@ -399,12 +402,12 @@
     (setq snippets-dir (concat user-emacs-directory "snippets"))
     (setq yas-snippet-dirs (list snippets-dir))))
 
-;; (use-package yasnippet-snippets
-;;   :no-require t
-;;   :ensure t
-;;   :defer t
-;;   :after yasnippet)
-;;;
+(use-package yasnippet-snippets
+  :no-require t
+  :ensure t
+  :defer t
+  :after yasnippet)
+
 
 ;;;Debuggers
 (use-package realgud
@@ -782,10 +785,36 @@
 
 
 ;;; Python
-(use-package virtualenvwrapper
-  :no-require t
-  :defer t
-  :ensure t)
+(use-package pet
+  :ensure-system-package (dasel sqlite3)
+  :config
+  (add-hook 'python-mode-hook
+            (lambda ()
+              (setq-local python-shell-interpreter (pet-executable-find "python")
+                          python-shell-virtualenv-root (pet-virtualenv-root))
+
+              (pet-flycheck-setup)
+              (flycheck-mode 1)
+
+              (setq-local lsp-jedi-executable-command
+                          (pet-executable-find "jedi-language-server"))
+
+              (setq-local lsp-pyright-python-executable-cmd python-shell-interpreter
+                          lsp-pyright-venv-path python-shell-virtualenv-root)
+
+              (lsp)
+
+              (setq-local dap-python-executable python-shell-interpreter)
+
+              (setq-local python-pytest-executable (pet-executable-find "pytest"))
+
+              (when-let ((black-executable (pet-executable-find "black")))
+                (setq-local python-black-command black-executable)
+                (python-black-on-save-mode 1))
+
+              (when-let ((isort-executable (pet-executable-find "isort")))
+                (setq-local python-isort-command isort-executable)
+                (python-isort-on-save-mode 1)))))
 
 (use-package importmagic
   :ensure t
@@ -816,7 +845,7 @@
 
 (use-package python
   :no-require t
-  :hook ((python-mode . (lambda () (python:setup) (lsp-deferred))))
+  :hook ((python-mode . (lambda () (python:setup))))
   :commands (python-indent-shift-left python-indent-shift-right)
   :bind (:map python-mode-map
               ("<tab>" . python-indent-shift-right)
@@ -834,6 +863,10 @@
     (utils:replace-string-in-file dir-locals-file
                                   "{{ VENV-NAME }}" venv-current-name))
 
+  (defun python:lsp-add-extra-path (extra-path)
+    "Add extra path locations to jedi workspace.  EXTRA-PATH."
+    (setq lsp-jedi-workspace-extra-paths extra-path))
+
   (defun python:setup ()
     "Function that setups 'python-mode'."
     (hack-local-variables)
@@ -843,32 +876,33 @@
         (setq python-shell-interpreter (executable-find "ipython"))
       (setq python-shell-interpreter-args "-i --simple-prompt"))
 
-    (when (executable-find "flake8")
+    (when (executable-find "jedi-language-server")
+      (lsp)
       ;; (setq flycheck-disabled-checkers '(python-mypy))
-      (setq flycheck-enabled-checkers '(python-pycompile
-                                        python-pylint
-                                        python-flake8))
+      ;; (setq flycheck-enabled-checkers '(python-pycompile
+      ;;                                   python-pylint
+      ;;                                   python-flake8))
 
-      (setq-local flycheck-checker 'python-flake8)
-      (setq-local flycheck-python-flake8-executable (executable-find "flake8"))
+      ;; (setq-local flycheck-checker 'python-flake8)
+      ;; (setq-local flycheck-python-flake8-executable (executable-find "flake8"))
       (let ((project-root))
         (projectile-mode +1)
         (with-eval-after-load "projectile"
-          (setq project-root projectile-project-root)
-          (setq flycheck-flake8rc (concat project-root ".flake8")))))
-    ((setq lsp-diagnostics-mode -1)))
+          (setq project-root (projectile-project-root))
+          (setq flycheck-flake8rc (concat project-root ".flake8"))))))
 
   (defun python:init ()
     "Initialize project conf for 'python-mode'."
     (interactive)
     (let ((dir-locals-file) (project-root))
       (with-eval-after-load "projectile"
-        (setq project-root projectile-project-root)
+        (setq project-root (projectile-project-root))
+        (message project-root)
         (setq dir-locals-file (concat project-root ".dir-locals.el"))
         (unless (file-exists-p dir-locals-file)
-        (utils:generate-project-files "python")
-        (python:--replace-template-variables dir-locals-file)
-        (python:setup))))))
+          (utils:generate-project-files "python")
+          (python:--replace-template-variables dir-locals-file))
+        (python:setup)))))
 
 (use-package lsp-jedi
   :ensure t
@@ -1006,9 +1040,12 @@
 (use-package flycheck-rust
   :ensure t
   :no-require t
-  :after (rust-mode flycheck)
+  :after (rustic flycheck)
+  ;; :after (rust-mode flycheck)
   :config
-  (add-hook 'flycheck-mode-hook #'flycheck-rust-setup))
+  ;; (add-hook 'flycheck-mode-hook #'flycheck-rust-setup))
+  (add-hook 'flycheck-mode-hook #'flycheck-rust-setup)
+  (push 'rustic-clippy flycheck-checkers))
 
 (use-package rustic
   :ensure t
@@ -1017,7 +1054,10 @@
   :custom
   (rust-indent-offset 4)
   :config
-  (push 'rustic-clippy flycheck-checkers))
+  ;; (push 'rustic-clippy flycheck-checkers))
+  (add-to-list 'lsp-enabled-clients 'rust-analyzer)
+  ;;(setq lsp-rust-server 'rust-analyzer)
+  (setq rustic-lsp-server 'rust-analyzer))
 
 (use-package cargo-mode
   :ensure t
