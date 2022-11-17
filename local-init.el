@@ -785,36 +785,10 @@
 
 
 ;;; Python
-(use-package pet
-  :ensure-system-package (dasel sqlite3)
-  :config
-  (add-hook 'python-mode-hook
-            (lambda ()
-              (setq-local python-shell-interpreter (pet-executable-find "python")
-                          python-shell-virtualenv-root (pet-virtualenv-root))
-
-              (pet-flycheck-setup)
-              (flycheck-mode 1)
-
-              (setq-local lsp-jedi-executable-command
-                          (pet-executable-find "jedi-language-server"))
-
-              (setq-local lsp-pyright-python-executable-cmd python-shell-interpreter
-                          lsp-pyright-venv-path python-shell-virtualenv-root)
-
-              (lsp)
-
-              (setq-local dap-python-executable python-shell-interpreter)
-
-              (setq-local python-pytest-executable (pet-executable-find "pytest"))
-
-              (when-let ((black-executable (pet-executable-find "black")))
-                (setq-local python-black-command black-executable)
-                (python-black-on-save-mode 1))
-
-              (when-let ((isort-executable (pet-executable-find "isort")))
-                (setq-local python-isort-command isort-executable)
-                (python-isort-on-save-mode 1)))))
+(use-package virtualenvwrapper
+  :no-require t
+  :defer t
+  :ensure t)
 
 (use-package importmagic
   :ensure t
@@ -878,18 +852,22 @@
 
     (when (executable-find "jedi-language-server")
       (lsp)
+      ;;(lsp-diagnostics-flycheck-enable t)
+      (lsp-diagnostics--disable)
+      (lsp-diagnostics--disable)
       ;; (setq flycheck-disabled-checkers '(python-mypy))
-      ;; (setq flycheck-enabled-checkers '(python-pycompile
-      ;;                                   python-pylint
-      ;;                                   python-flake8))
+      (setq flycheck-enabled-checkers '(python-pycompile
+                                        python-pylint
+                                        python-flake8))
 
-      ;; (setq-local flycheck-checker 'python-flake8)
-      ;; (setq-local flycheck-python-flake8-executable (executable-find "flake8"))
+      (flycheck-mode +1)
+
+      (setq-local flycheck-checker 'python-flake8)
+      (setq-local flycheck-python-flake8-executable (executable-find "flake8"))
       (let ((project-root))
         (projectile-mode +1)
         (with-eval-after-load "projectile"
-          (setq project-root (projectile-project-root))
-          (setq flycheck-flake8rc (concat project-root ".flake8"))))))
+          (setq project-root (projectile-project-root))))))
 
   (defun python:init ()
     "Initialize project conf for 'python-mode'."
