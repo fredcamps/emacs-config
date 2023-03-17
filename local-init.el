@@ -266,8 +266,9 @@
   :no-require t
   :config
   (when (memq window-system '(mac ns x))
-    (exec-path-from-shell-copy-env "WORKON_HOME")
-    (exec-path-from-shell-initialize)))
+    (setq exec-path-from-shell-variables '("PATH" "MANPATH" "WORKON_HOME"))
+    (setq exec-path-from-shell-arguments nil)  ;; "-i for fish"
+    (exec-path-from-shell-initialize )))
 
 
 ;;; Better than IDO
@@ -831,9 +832,14 @@
   (python-indent-guess-indent-offset nil)
   (python-indent-guess-indent-offset-verbose nil)
   :config
+  (defun python:--ask-create-virtual-env ()
+    "Create virtual env"
+    (if (y-or-n-p "Do you want to create virtualenv?")
+        (progn (call-interactively #'venv-mkvirtualenv))
+      (call-interactively #'venv-workon)))
+
   (defun python:--replace-template-variables (dir-locals-file)
     "Replace variables from .dir-locals.el file.  DIR-LOCALS-FILE."
-    (call-interactively #'venv-workon)
     (utils:replace-string-in-file dir-locals-file
                                   "{{ VENV-NAME }}" venv-current-name))
 
@@ -878,6 +884,7 @@
         (message project-root)
         (setq dir-locals-file (concat project-root ".dir-locals.el"))
         (unless (file-exists-p dir-locals-file)
+          (python:--ask-create-virtual-env)
           (utils:generate-project-files "python")
           (python:--replace-template-variables dir-locals-file))
         (python:setup)))))
