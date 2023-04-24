@@ -281,8 +281,10 @@
   (setq enable-recursive-minibuffers t)
   ;; enable this if you want `swiper' to use it
   ;; (setq search-default-mode #'char-fold-to-regexp)
-  (global-set-key "\C-s" 'swiper)
-  (global-set-key "\C-r" 'swiper)
+  (setq counsel-grep-base-command
+        "rg -i -M 120 --no-heading --color never '%s' %s")
+  (global-set-key "\C-s" 'counsel-grep)
+  (global-set-key "\C-r" 'counsel-grep-backward)
   (global-set-key (kbd "C-c r") 'ivy-resume)
   (global-set-key (kbd "C-c C-o") 'ivy-occur)
   (global-set-key (kbd "<f6>") 'ivy-resume)
@@ -298,7 +300,7 @@
   (global-set-key (kbd "<f2> u") 'counsel-unicode-char)
   (global-set-key (kbd "C-c g") 'counsel-git)
   (global-set-key (kbd "C-c j") 'counsel-git-grep)
-  ;;  (global-set-key (kbd "C-c C-k") 'counsel-ag)
+  (global-set-key (kbd "C-c C-k") 'counsel-rg)
   (global-set-key (kbd "C-x l") 'counsel-locate)
   (global-set-key (kbd "C-S-o") 'counsel-rhythmbox)
   (define-key minibuffer-local-map (kbd "C-r") 'counsel-minibuffer-history))
@@ -978,6 +980,8 @@
 (use-package sh-script
   :no-require t
   :custom
+  (setq flycheck-enabled-checkers '(sh-shellcheck))
+  ;; (setq flycheck-shellcheck-follow-sources nil)
   (sh-basic-offset 4))
 ;;;
 
