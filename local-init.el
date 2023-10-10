@@ -283,8 +283,8 @@
   ;; (setq search-default-mode #'char-fold-to-regexp)
   (setq counsel-grep-base-command
         "rg -i -M 120 --no-heading --color never '%s' %s")
-  (global-set-key "\C-s" 'counsel-grep)
-  (global-set-key "\C-r" 'counsel-grep-backward)
+  (global-set-key "\C-s" 'swiper)
+  ;; (global-set-key "\C-r" 'counsel-grep-backward)
   (global-set-key (kbd "C-c r") 'ivy-resume)
   (global-set-key (kbd "C-c C-o") 'ivy-occur)
   (global-set-key (kbd "<f6>") 'ivy-resume)
@@ -861,7 +861,6 @@
     (when (executable-find "jedi-language-server")
       (lsp)
       ;;(lsp-diagnostics-flycheck-enable t)
-      (lsp-diagnostics--disable)
       (lsp-diagnostics--disable)
       ;; (setq flycheck-disabled-checkers '(python-mypy))
       (setq flycheck-enabled-checkers '(python-pycompile
