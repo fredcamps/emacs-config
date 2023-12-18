@@ -712,6 +712,13 @@
 ;;;
 
 
+;;; Editor Config
+(use-package editorconfig
++  :ensure t
++  :no-require t
++  :config
++  (editorconfig-mode 1))
+;;;
 ;; --- ;;
 
 ;; --- My Custom utilities --- ;;
