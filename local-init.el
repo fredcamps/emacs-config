@@ -20,33 +20,20 @@
 ;;
 ;;; Code:
 ;;
-(defconst packages-to-install
-  '(use-package)
-  "Packages to install.")
 
 (defun init:setup-repository ()
   "Set repository channels."
   (setq package-enable-at-startup nil)
   (setq package-check-signature nil)
-  ;; (setq package-archives
-  ;;      '(("melpa" .
-  ;;         "https://raw.githubusercontent.com/d12frosted/elpa-mirror/master/melpa/")
-  ;;        ("org" .
-  ;;         "https://raw.githubusercontent.com/d12frosted/elpa-mirror/master/org/")
-  ;;        ("gnu" .
-  ;;         "https://raw.githubusercontent.com/d12frosted/elpa-mirror/master/gnu/")))
   (setq package-archives
         '(("melpa" . "https://melpa.org/packages/")
-          ("org" . "http://orgmode.org/elpa/")
+          ("nongnu" . "https://elpa.nongnu.org/nongnu/")
           ("gnu" . "https://elpa.gnu.org/packages/")))
-
+  (setq package-archive-priorities
+    '(("melpa"  . 10)
+      ("gnu"    . 5)
+      ("nongnu" . 1)))
   (package-refresh-contents))
-
-(defun init:install-missing-packages ()
-  "Install missing packages."
-  (init:setup-repository)
-  (dolist (pkg packages-to-install)
-    (package-install pkg)))
 
 (defun install-el-package ()
   "Install an arbitrary package from repository."
@@ -55,10 +42,15 @@
   (call-interactively #'package-install))
 
 (eval-when-compile
-  (unless (require 'use-package nil 'noerror)
-    (init:install-missing-packages)
+  (unless (package-installed-p 'use-package)
+    (init:setup-repository)
+    (package-install 'use-package)
     (require 'use-package))
-  (setq use-package-always-ensure nil))
+  (unless (package-installed-p 'use-package-ensure-system-package)
+    (init:setup-repository))
+  ;; (setq use-package-always-pin "melpa")
+  (require 'use-package-ensure)
+  (setq use-package-always-ensure t))
 
 ;; --- Emacs settings --- ;;
 ;;; Perfomance
@@ -108,6 +100,10 @@
  )
 (setq completion-auto-help t)
 (setq doc-view-continuous t)
+
+(unless (version< emacs-version "29")
+  (pixel-scroll-precision-mode t))
+
 ;;;
 
 ;;; Misc settings
@@ -213,12 +209,10 @@
 ;; --- ;;
 
 ;; --- Extensions settings --- ;;
-(use-package use-package-ensure-system-package
-  :ensure t)
+(use-package use-package-ensure-system-package)
 
 ;;; Profile Emacs startup
 (use-package esup
-  :ensure t
   :no-require t
   :commands (esup)
   :config
@@ -227,14 +221,12 @@
 
 ;;; RPC stack
 (use-package epc
-  :ensure t
   :no-require t
   :defer t)
 ;;;
 
 ;;; Move lines
 (use-package move-dup
-  :ensure t
   :no-require t
   :config
   (move-dup-mode)
@@ -248,7 +240,6 @@
 (use-package auto-compile
   :hook elisp-mode-hook
   :demand t
-  :ensure t
   :custom
   (auto-compile-display-buffer nil)
   (auto-compile-mode-line-counter t)
@@ -262,7 +253,6 @@
 
 ;;; Get shell environment variables
 (use-package exec-path-from-shell
-  :ensure t
   :no-require t
   :config
   (when (memq window-system '(mac ns x))
@@ -273,7 +263,6 @@
 
 ;;; Better than IDO
 (use-package counsel
-  :ensure t
   :no-require t
   :config
   (ivy-mode 1)
@@ -306,7 +295,6 @@
   (define-key minibuffer-local-map (kbd "C-r") 'counsel-minibuffer-history))
 
 (use-package counsel-projectile
-  :ensure t
   :no-require t
   :bind (("C-c f" . counsel-projectile-find-file)
          ("C-c p" . counsel-projectile-switch-project)))
@@ -314,7 +302,6 @@
 
 ;;; Diagnostic checker on the fly
 (use-package flycheck
-  :ensure t
   :no-require t
   :hook (prog-mode . flycheck-mode)
   :custom
@@ -346,7 +333,6 @@
 
 ;;; Company completion framework
 (use-package company
-  :ensure t
   :no-require t
   :defer t
   :init
@@ -363,7 +349,6 @@
     (global-auto-complete-mode -1)))
 
 (use-package company-dict
-  :ensure t
   :no-require t
   :custom
   (company-dict-enable-fuzzy nil)
@@ -372,13 +357,11 @@
   (setq company-dict-dir (concat user-emacs-directory "dict"))
   (add-to-list 'company-backends 'company-dict))
 
-(use-package company-tabnine
-  :ensure t)
+(use-package company-tabnine) ;; AI completion
 ;;;
 
 ;;; Project management support
 (use-package projectile
-  :ensure t
   :defer t
   :no-require t
   :after (doom-modeline)
@@ -395,7 +378,6 @@
 
 ;;; Snippets support
 (use-package yasnippet
-  :ensure t
   :no-require t
   :init
   (add-hook 'prog-mode-hook 'yas-minor-mode)
@@ -407,19 +389,16 @@
 
 (use-package yasnippet-snippets
   :no-require t
-  :ensure t
   :defer t
   :after yasnippet)
 
 
 ;;;Debuggers
 (use-package realgud
-  :ensure t
   :no-require t
   :commands (realgud:pdb realgud:pdb-remote realgud:gdb))
 
 (use-package realgud-trepan-ni ;;js/ts debugger
-  :ensure t
   :no-require t
   :commands (realgud:trepan-ni)
   :hook ((typescript-mode . (lambda ()
@@ -435,7 +414,6 @@
 ;;; git support
 (use-package git-gutter
   :no-require t
-  :ensure t
   :custom
   (git-gutter:handled-backends '(git hg bzr svn))
   (git-gutter:hide-gutter t)
@@ -443,19 +421,17 @@
   (global-git-gutter-mode +1))
 
 (use-package magit
-  :ensure t
   :no-require t
   :defer t)
 
 (use-package magit-gitflow
-  :ensure t
   :defer t
   :no-require t)
 ;;;
 
 ;;; Search ripgrep
 (use-package rg
-  :ensure t
+  :ensure-system-package (rg . ripgrep)
   :defer t
   :no-require t
   :config
@@ -463,7 +439,6 @@
 
 ;;; Occur and folding
 (use-package loccur
-  :ensure t
   :no-require t
   :bind (:map prog-mode-map
               ("C-c o" . loccur)))
@@ -475,18 +450,15 @@
   :no-require t
   :after company
   :config
-  (add-to-list 'company-backends 'company-restclient)
-  :ensure t)
+  (add-to-list 'company-backends 'company-restclient))
 
 (use-package restclient
-  :ensure t
   :defer t
   :no-require t)
 ;;;
 
 ;;; Static/markup files preview
 (use-package skewer-mode
-  :ensure t
   :no-require t
   :requires (simple-httpd)
   :hook ((js2-mode . skewer-mode)
@@ -499,13 +471,11 @@
 ;;; Indent guide line
 (use-package indent-guide
   :no-require t
-  :defer t
-  :ensure t)
+  :defer t)
 ;;;
 
 ;;; Show color by hex
 (use-package rainbow-mode
-  :ensure t
   :no-require t
   :defer t
   :pin gnu)
@@ -513,7 +483,6 @@
 
 ;;; Colorize delimiters by scope
 (use-package rainbow-delimiters
-  :ensure t
   :no-require t
   :defer t
   :init
@@ -522,7 +491,6 @@
 
 ;;; Doom-mode
 (use-package doom-modeline
-  :ensure t
   :init (doom-modeline-mode 1)
   :custom
   (doom-modeline-height 25)
@@ -560,7 +528,6 @@
   (doom-modeline-env-load-string "..."))
 
 (use-package doom-themes
-  :ensure t
   :config
   ;; Global settings (defaults)
   (setq doom-themes-enable-bold t    ;; if nil, bold is universally disabled
@@ -589,7 +556,6 @@
 
 ;;; Show Icons
 (use-package all-the-icons
-  :ensure t
   :if (display-graphic-p))
 
 ;; (use-package icons-in-terminal
@@ -599,7 +565,6 @@
 
 ;;; Clipboard sharing
 (use-package xclip
-  :ensure t
   :unless (display-graphic-p)
   :pin gnu
   :no-require t
@@ -609,7 +574,6 @@
 
 ;;; keybindings discoverable
 (use-package which-key
-  :ensure t
   :no-require t
   :config
   (which-key-mode))
@@ -617,7 +581,6 @@
 
 ;;; Generic code jumping
 (use-package dumb-jump
-  :ensure t
   :no-require t
   :bind (("M-g o" . dumb-jump-go-other-window)
          ("M-g j" . dumb-jump-go)
@@ -632,7 +595,6 @@
 
 ;;; Language server protocol
 (use-package lsp-mode
-  :ensure t
   :no-require t
   :commands (lsp-find-definition)
   :custom
@@ -669,7 +631,6 @@
 
 ;;; better than built-in python-shell-send
 (use-package eval-in-repl
-  :ensure t
   :no-require t
   :init
   (setq eir-repl-placement 'right)
@@ -684,7 +645,6 @@
 
 ;;; terminal emulator better than built-in
 (use-package multi-vterm
-  :ensure t
   :no-require t
   :config
   (setq vterm-always-compile-module t)
@@ -692,21 +652,18 @@
 
 ;;; easy compile and run
 (use-package quickrun
-  :ensure t
   :bind (:map prog-mode-map ("C-c e" . quickrun))
   :no-require t)
 ;;;
 
 ;;; easy disassembly while compiling
 (use-package rmsbolt
-  :ensure t
   :defer t
   :no-require t)
 ;;;
 
 ;;; Local local environment variables
 (use-package envrc
- :ensure t
  :config
  (envrc-global-mode))
 ;;;
@@ -714,10 +671,9 @@
 
 ;;; Editor Config
 (use-package editorconfig
-+  :ensure t
-+  :no-require t
-+  :config
-+  (editorconfig-mode 1))
+  :no-require t
+  :config
+  (editorconfig-mode 1))
 ;;;
 ;; --- ;;
 
@@ -737,40 +693,32 @@
 ;;; JSON/Yaml
 (use-package json-mode
   :no-require t
-  :ensure t
   :bind (:map json-mode-map
               ("C-c b" . json-mode-beautify)))
 
 (use-package yaml-mode
-  :no-require t
-  :ensure t)
+  :no-require t)
 ;;;
 
 ;;; Elisp
 (use-package elisp-slime-nav
   :no-require t
-  :ensure t
   :config
   (add-hook 'emacs-lisp-mode-hook 'turn-on-elisp-slime-nav-mode)
   (add-hook 'ielm-mode-hook 'turn-on-elisp-slime-nav-mode))
 
 (use-package package-lint
-  :no-require t
-  :ensure t)
+  :no-require t)
 
 (use-package elisp-lint
   :no-require t
-  :hook emacs-lisp-mode-hook
-  :ensure t)
+  :hook emacs-lisp-mode-hook)
 
 (use-package elisp-format
   :no-require t
-  :ensure t
   :bind (:map emacs-lisp-mode-map
               ("C-c b" . elisp-format-buffer)))
 
-(use-package elisp-mode
-  :no-require t)
 ;;;
 
 
@@ -789,32 +737,27 @@
 
 ;;; java
 (use-package lsp-java
-  :no-require t
-  :ensure t)
+  :no-require t)
 ;;;
 
 
 ;;; Python
 (use-package virtualenvwrapper
   :no-require t
-  :defer t
-  :ensure t)
+  :defer t)
 
 (use-package importmagic
-  :ensure t
   :no-require t
   :commands importmagic-fix-imports
   :bind (:map python-mode-map
               ("C-c C-l" . importmagic-fix-imports)))
 
 (use-package python-black
-  :ensure t
   :no-require t
   :bind (:map python-mode-map
               ("C-c b" . python-black-buffer)))
 
 (use-package pytest
-  :ensure t
   :no-require t
   :init
   (add-hook 'python-mode-hook
@@ -898,19 +841,16 @@
         (python:setup)))))
 
 (use-package lsp-jedi
-  :ensure t
   :config
   (with-eval-after-load "lsp-mode"
     (add-to-list 'lsp-disabled-clients 'pyls)
     (add-to-list 'lsp-enabled-clients 'jedi)))
 
-(use-package ein
-  :ensure t)
+(use-package ein) ;; python-notebook
 ;;;
 
 ;;; Javascript/Typescript
 (use-package js-comint
-  :ensure t
   :no-require t
   :bind (:map js2-mode-map
               ("C-c C-e" . 'js-send-last-sexp)
@@ -924,7 +864,6 @@
   (add-hook 'inferior-js-mode-hook 'inferior-js-mode-hook-setup t))
 
 (use-package ts-comint
-  :ensure t
   :no-require t
   :bind (:map typescript-mode-map
               ("C-c C-e" . 'ts-send-last-sexp)
@@ -932,20 +871,17 @@
               ("C-c C-g" . 'ts-send-buffer-and-go)))
 
 (use-package add-node-modules-path
-  :ensure t
   :no-require t
   :hook ((js2-jsx-mode . add-node-modules-path)
          (js2-mode . add-node-modules-path)
          (typescript-mode . add-node-modules-path)))
 
 (use-package jest-test-mode
-  :ensure t
   :no-require t
   :bind (:map js2-mode-map ("C-c C-t" . 'jest-test-debug-run-at-point)
          :map typescript-mode-map ("C-c C-t" . 'jest-test-debug-run-at-point)))
 
 (use-package js2-mode
-  :ensure t
   :no-require t
   :mode ("\\.js$" . js2-mode)
   :interpreter "node"
@@ -955,14 +891,16 @@
   (setq flycheck-enabled-checkers
         '(javascript-eslint javascript-standard)))
 
-(use-package js2-jsx-mode
-  :no-require t
-  :mode ("\\.jsx$" . js2-jsx-mode)
-  :hook (js2-jsx-mode . lsp)
-  :after js2-mode)
+(use-package jtsx
+  :mode (("\\.jsx?\\'" . jtsx-jsx-mode)
+         ("\\.tsx\\'" . jtsx-tsx-mode)
+         ("\\.ts\\'" . jtsx-typescript-mode))
+  :commands jtsx-install-treesit-language
+  :hook ((jtsx-jsx-mode . hs-minor-mode)
+         (jtsx-tsx-mode . hs-minor-mode)
+         (jtsx-typescript-mode . hs-minor-mode)))
 
 (use-package typescript-mode
-  :ensure t
   :no-require t
   :mode ((("\\.tsx$" . typescript-mode) ("\\.ts$" . typescript-mode)))
   :hook (typescript-mode . lsp)
@@ -976,7 +914,6 @@
 
 ;;; Bash/Shell Scripting
 (use-package company-shell
-  :ensure t
   :no-require t
   :after company
   :hook sh-mode
@@ -993,7 +930,6 @@
 
 ;;; C/C++
 (use-package flycheck-clang-tidy
-  :ensure t
   :no-require t
   :after (cc-mode flycheck)
   :config
@@ -1021,7 +957,6 @@
 
 ;;; Markdown
 (use-package markdown-mode
-  :ensure t
   :no-require t
   :commands (markdown-mode gfm-mode)
   :mode (("README\\.md\\'" . gfm-mode)
@@ -1033,7 +968,6 @@
 
 ;;; Rust
 (use-package flycheck-rust
-  :ensure t
   :no-require t
   :after (rustic flycheck)
   ;; :after (rust-mode flycheck)
@@ -1043,7 +977,6 @@
   (push 'rustic-clippy flycheck-checkers))
 
 (use-package rustic
-  :ensure t
   :no-require t
   :hook (rust-mode . lsp)
   :custom
@@ -1055,7 +988,6 @@
   (setq rustic-lsp-server 'rust-analyzer))
 
 (use-package cargo-mode
-  :ensure t
   :config
   (setq compilation-scroll-output t)
   (add-hook 'rust-mode-hook 'cargo-minor-mode))
@@ -1080,7 +1012,6 @@
 
 ;;; Assembly x86
 (use-package nasm-mode
-  :ensure t
   :no-require t
   :custom
   (nasm-basic-offset 4))
@@ -1088,13 +1019,11 @@
 
 ;;; Fish shell
 (use-package fish-mode
-  :ensure t
   :no-require t
   :defer t)
 
 ;;; Terraform
 (use-package company-terraform
-  :ensure t
   :hook terraform-mode
   :no-require t
   :after company
@@ -1102,7 +1031,6 @@
   (company-terraform-init))
 
 (use-package terraform-mode
-  :ensure t
   :no-require t
   :custom
   (terraform-indent-level 2))
@@ -1110,7 +1038,6 @@
 
 ;;; Web
 (use-package web-mode
-  :ensure t
   :no-require t
   :mode (("\\.css?\\'" . web-mode)
          ("\\.html?\\'" . web-mode)
@@ -1128,13 +1055,11 @@
 
 ;;; Dockerfile
 (use-package dockerfile-mode
-  :ensure t
   :no-require t)
 ;;;
 
 ;;; Latex
 (use-package company-math
-  :ensure t
   :no-require t
   :after company
   :hook ((tex-mode . company-math-mode)
@@ -1144,7 +1069,6 @@
                                    company-latex-commands)))
 
 (use-package latex-preview-pane
-  :ensure t
   :defer t
   :no-require t)
 ;;;
