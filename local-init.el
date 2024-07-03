@@ -220,13 +220,8 @@
 
 (use-package move-text
   :no-require t
-  :config (move-text-mode)
   :bind (("M-p" . move-text-up)
          ("M-n" . move-text-down)))
-;; ("C-M-p" . md-duplicate-up)
-;;("C-M-n" . md-duplicate-down)))
-;; ("M-n" . md-move-lines-down)
-
 ;;;
 
 ;;; Auto compile elisp packages
@@ -352,7 +347,7 @@
 
 ;;; Search ripgrep
 (use-package rg
-  :ensure-system-package (rg . ripgrep)
+  :ensure-system-package rg
   :defer t
   :no-require t
   :config (rg-enable-default-bindings))
@@ -479,7 +474,9 @@
 
 ;;; Show Icons
 (use-package all-the-icons
-  :if (display-graphic-p))
+  :if (display-graphic-p)
+  :config
+  (setq inhibit-compacting-font-caches t))
 
 ;; (use-package icons-in-terminal
 ;;   :ensure t
@@ -882,7 +879,8 @@
 ;; ;;; C/C++
 (use-package cc-mode
   :no-require t
-  :hook (cc-mode . eglot-ensure)
+  :hook (c-mode-common . eglot-ensure)
+  :ensure-system-package clangd
   :custom
   (c-default-style "linux")
   (c-basic-offset 4)
@@ -909,6 +907,7 @@
 ;;; Rust
 (use-package rust-mode
   :no-require t
+  :ensure-system-package rust-analyzer
   :hook (rust-mode . eglot-ensure)
   :custom
   (rust-indent-offset 4)
