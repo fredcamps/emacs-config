@@ -785,21 +785,16 @@
 
 
 ;;; Go
-  ;; Go - lsp-mode
-  ;; Set up before-save hooks to format buffer and add/delete imports.
-  ;; (defun lsp-go-install-save-hooks ()
-  ;;   (add-hook 'before-save-hook #'lsp-format-buffer t t)
-  ;;   (add-hook 'before-save-hook #'lsp-organize-imports t t))
-  ;; (add-hook 'go-mode-hook #'lsp-go-install-save-hooks)
-
-  ;; ;; Start LSP Mode
-  ;; (add-hook 'go-mode-hook #'lsp-deferred)
+(use-package go-mode
+  :no-require t
+  :hook (go-mode . eglot-ensure))
 ;;;
 
 
 ;;; java
-  ;; (use-package lsp-java
-  ;;   :no-require t)
+(use-package eglot-java
+  :no-require t
+  :hook (java-mode . eglot-ensure))
 ;;;
 
 ;;; Javascript/Typescript
@@ -875,19 +870,26 @@
 
 (use-package sh-script
   :no-require t
+  :hook
+  (sh-mode . eglot-ensure)
+  (bash-ts-mode . eglot-ensure)
+  :custom
+  (sh-basic-offset 4)
   :config
-  (sh-basic-offset 4))
+  (add-to-list 'eglot-server-programs '((sh-mode bash-ts-mode) . ("bash-language-server" "start"))))
 ;;;
 
 ;; ;;; C/C++
 (use-package cc-mode
   :no-require t
+  :hook (cc-mode . eglot-ensure)
   :custom
   (c-default-style "linux")
   (c-basic-offset 4)
   (c-tab-always-indent t)
   :config
-  (eglot-ensure))
+  (require 'eglot)
+  (add-to-list 'eglot-server-programs '((c++-mode c-mode) "clangd")))
 ;; ;;;
 
 ;;; Make
@@ -905,40 +907,38 @@
 ;;;
 
 ;;; Rust
-  ;; (use-package flycheck-rust
-  ;;   :no-require t
-  ;;   :after (rustic flycheck)
-  ;;   ;; :after (rust-mode flycheck)
-  ;;   :config
-  ;;   ;; (add-hook 'flycheck-mode-hook #'flycheck-rust-setup))
-  ;;   (add-hook 'flycheck-mode-hook #'flycheck-rust-setup)
-  ;;   (push 'rustic-clippy flycheck-checkers))
+(use-package rust-mode
+  :no-require t
+  :hook (rust-mode . eglot-ensure)
+  :custom
+  (rust-indent-offset 4)
+  :config
+  ;; https://rust-analyzer.github.io/manual.html#configuration
+  (setq-local eglot-workspace-configuration
+    ;; Setting the workspace configuration for every
+    ;; rust-mode buffer, you can also set it with dir-local
+    ;; variables, should you want different configuration
+    ;; per project/directory.
+    '(:rust-analyzer
+       ( :procMacro ( :attributes (:enable t)
+                      :enable t)
+         :cargo (:buildScripts (:enable t))
+         :diagnostics (:disabled ["unresolved-proc-macro"
+                                  "unresolved-macro-call"])))))
 
-  ;; (use-package rustic
-  ;;   :no-require t
-  ;;   :hook (rust-mode . lsp)
-  ;;   :custom
-  ;;   (rust-indent-offset 4)
-  ;;   :config
-  ;;   ;; (push 'rustic-clippy flycheck-checkers))
-  ;;   (add-to-list 'lsp-enabled-clients 'rust-analyzer)
-  ;;   ;;(setq lsp-rust-server 'rust-analyzer)
-  ;;   (setq rustic-lsp-server 'rust-analyzer))
-
-  ;; (use-package cargo-mode
-  ;;   :config
-  ;;   (setq compilation-scroll-output t)
-  ;;   (add-hook 'rust-mode-hook 'cargo-minor-mode))
+(use-package cargo-mode
+  :config
+  (setq compilation-scroll-output t)
+  (add-hook 'rust-mode-hook 'cargo-minor-mode))
 ;;;
 
 ;;; Ruby
 (use-package ruby-mode
   :no-require t
+  :hook (ruby-mode . eglot-ensure)
   :custom
   (ruby-indent-level 2)
-  (ruby-indent-tabs nil)
-  :config
-  (eglot-ensure))
+  (ruby-indent-tabs nil))
 ;;;
 
 ;;; SQL
