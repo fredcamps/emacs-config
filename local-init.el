@@ -730,9 +730,9 @@
                                                                          :flake8 (:enabled :json-false :maxLineLength 88)
                                                                          :ruff (:enabled t :lineLength 88)
                                                                          :pydocstyle (:enabled t :convention "numpy")
-                                                               :yapf (:enabled :json-false)
-                                                               :autopep8 (:enabled :json-false)
-                                                               :black (:enabled t :line_length 88  :cache_config t))))))
+                                                                         :yapf (:enabled :json-false)
+                                                                         :autopep8 (:enabled :json-false)
+                                                                         :black (:enabled t :line_length 88  :cache_config t))))))
 
     (eglot-ensure)
     (let ((project-root))
