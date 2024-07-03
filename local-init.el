@@ -25,19 +25,16 @@
   "Set repository channels."
   (setq package-enable-at-startup nil)
   (setq package-check-signature nil)
-  (setq package-archives
-        '(("melpa" . "https://melpa.org/packages/")
-          ("nongnu" . "https://elpa.nongnu.org/nongnu/")
-          ("gnu" . "https://elpa.gnu.org/packages/")))
-  (setq package-archive-priorities
-    '(("melpa"  . 10)
-      ("gnu"    . 5)
-      ("nongnu" . 1)))
+  (setq package-archives '(("melpa" . "https://melpa.org/packages/")
+                           ("nongnu" . "https://elpa.nongnu.org/nongnu/")
+                           ("gnu" . "https://elpa.gnu.org/packages/")))
+  (setq package-archive-priorities '(("melpa"  . 10)
+                                     ("gnu"    . 5)
+                                     ("nongnu" . 1)))
   (package-refresh-contents))
 
 (defun install-el-package ()
-  "Install an arbitrary package from repository."
-  (interactive)
+  "Install an arbitrary package from repository." (interactive)
   (init:setup-repository)
   (call-interactively #'package-install))
 
@@ -77,29 +74,23 @@
 ;;; Behaviour settings
 (setq search-whitespace-regexp ".*?")
 (setq load-prefer-newer t)
-(with-current-buffer "*scratch*"
-  (emacs-lock-mode 'kill))
+(with-current-buffer "*scratch*" (emacs-lock-mode 'kill))
 (electric-pair-mode t)
 (fset 'yes-or-no-p 'y-or-n-p)
-(setq-default save-interprogram-paste-before-kill t
-              uniquify-buffer-name-style 'forward
-              require-final-newline t
-              auto-save-default nil
-              make-backup-files nil)
+(setq-default save-interprogram-paste-before-kill t uniquify-buffer-name-style 'forward require-final-newline t auto-save-default nil make-backup-files nil)
 (save-place-mode 1)
-(setq save-place-file (concat user-emacs-directory ".emacs-places"))
+;; (setq save-place-file (concat user-emacs-directory ".emacs-places"))
 (setq temporary-file-directory (concat user-emacs-directory "tmp"))
 (delete-selection-mode t)
-(custom-set-variables
- '(comint-scroll-to-bottom-on-input t) ; always insert at the bottom
- '(comint-scroll-to-bottom-on-output t) ; always add output at the bottom
- '(comint-scroll-show-maximum-output t) ; scroll to show max possible output
- '(comint-completion-autolist t) ; show completion list when ambiguous
- '(comint-input-ignoredups t) ; no duplicates in command history
- '(comint-completion-addsuffix t) ; insert space/slash after file completion
- )
+(custom-set-variables '(comint-scroll-to-bottom-on-input t) ; always insert at the bottom
+                      '(comint-scroll-to-bottom-on-output t) ; always add output at the bottom
+                      '(comint-scroll-show-maximum-output t) ; scroll to show max possible output
+                      '(comint-completion-autolist t) ; show completion list when ambiguous
+                      '(comint-input-ignoredups t) ; no duplicates in command history
+                      '(comint-completion-addsuffix t) ; insert space/slash after file completion
+                      )
 (setq completion-auto-help t)
-(setq doc-view-continuous t)
+;;(setq doc-view-continuous t)
 
 (unless (version< emacs-version "29")
   (pixel-scroll-precision-mode t))
@@ -114,15 +105,11 @@
 ;;; Indentation settings
 (setq-default fill-column 100)
 (electric-indent-mode +1)
-(setq-default js-indent-level 2
-              tab-width 2
-              tab-always-indent 'complete
-              indent-tabs-mode nil)
+(setq-default js-indent-level 2 tab-width 2 tab-always-indent 'complete indent-tabs-mode nil)
 ;;;
 
 ;;; Appearance settings
-(setq-default inhibit-splash-screen t
-              inhibit-startup-message t)
+(setq-default inhibit-splash-screen t inhibit-startup-message t)
 (transient-mark-mode t)
 (menu-bar-mode -1)
 (tool-bar-mode -1)
@@ -155,7 +142,7 @@
 (global-set-key (kbd "RET") 'newline-and-indent)
 ;; (global-set-key (kbd "C-x t") #'ansi-term)
 (global-set-key (kbd "M-.") #'xref-find-definitions)
-(global-set-key (kbd "M-,") #'xref-pop-marker-stack)
+(global-set-key (kbd "M-,") #'xref-go-back)
 (global-set-key (kbd "C-x 4 ,") #'xref-find-definitions-other-window)
 (global-set-key (kbd "<backtab>") #'indent-for-tab-command)
 ;;;
@@ -171,22 +158,18 @@
 ;;;
 
 ;;; Remote access
-(setq tramp-default-method "ssh"
-      tramp-backup-directory-alist backup-directory-alist
-      tramp-ssh-controlmaster-options "ssh")
+(setq tramp-default-method "ssh" tramp-backup-directory-alist backup-directory-alist tramp-ssh-controlmaster-options "ssh")
 ;;;
 
 ;;; Hooks
-(add-hook 'completion-setup-hook
-          (lambda ()
-            (run-at-time 3 nil (lambda ()
-                                 (delete-windows-on "*Completions*")))))
-(add-hook 'dirtrack-mode-hook
-          (function (lambda ()
-                      (set-buffer-process-coding-system 'utf-8-unix 'utf-8-unix))))
+(add-hook 'completion-setup-hook (lambda ()
+                                   (run-at-time 3 nil (lambda ()
+                                                        (delete-windows-on "*Completions*")))))
+(add-hook 'dirtrack-mode-hook (function (lambda ()
+                                          (set-buffer-process-coding-system 'utf-8-unix 'utf-8-unix))))
 
-(add-hook 'ein:notebook-multilang-mode-hook
-          (lambda () (spacemacs/toggle-whitespace-cleanup-off)))
+(add-hook 'ein:notebook-multilang-mode-hook (lambda ()
+                                              (spacemacs/toggle-whitespace-cleanup-off)))
 
 (add-hook 'before-save-hook 'delete-trailing-whitespace t)
 (add-hook 'emacs-lisp-mode-hook 'turn-on-eldoc-mode t)
@@ -195,16 +178,20 @@
 ;;;
 
 ;;; Perfomance hooks
-(add-hook 'minibuffer-setup-hook (lambda() (setq gc-cons-threshold most-positive-fixnum)))
-(add-hook 'minibuffer-exit-hook (lambda() (setq gc-cons-threshold 800000)))
+(add-hook 'minibuffer-setup-hook (lambda()
+                                   (setq gc-cons-threshold most-positive-fixnum)))
+(add-hook 'minibuffer-exit-hook (lambda()
+                                  (setq gc-cons-threshold 800000)))
 ;;;
 
 ;;; Indentation hooks
 (add-hook 'make-file-mode-hook (lambda()
-                                  (setq-local tab-width 4)
-                                  (setq-local indent-tabs-mode t)) t t)
-(add-hook 'markdown-mode-hook (lambda() (setq-local tab-width 4)) t t)
-(add-hook 'sql-mode-hook (lambda() (setq-local tab-width 4)) t t)
+                                 (setq-local tab-width 4)
+                                 (setq-local indent-tabs-mode t)) t t)
+(add-hook 'markdown-mode-hook (lambda()
+                                (setq-local tab-width 4)) t t)
+(add-hook 'sql-mode-hook (lambda()
+                           (setq-local tab-width 4)) t t)
 ;;;
 ;; --- ;;
 
@@ -215,8 +202,7 @@
 (use-package esup
   :no-require t
   :commands (esup)
-  :config
-  (setenv "TERM" "screen-24bits"))
+  :config (setenv "TERM" "screen-24bits"))
 ;;;
 
 ;;; RPC stack
@@ -226,52 +212,55 @@
 ;;;
 
 ;;; Move lines
-(use-package move-dup
+(advice-add 'move-text-up
+            :after 'indent-region-advice)
+(advice-add 'move-text-down
+            :after 'indent-region-advice)
+
+
+(use-package move-text
   :no-require t
-  :config
-  (move-dup-mode)
-  :bind (("M-p" . md-move-lines-up)
-         ("C-M-p" . md-duplicate-up)
-         ("M-n" . md-move-lines-down)
-         ("C-M-n" . md-duplicate-down)))
+  :config (move-text-mode)
+  :bind (("M-p" . move-text-up)
+         ("M-n" . move-text-down)))
+;; ("C-M-p" . md-duplicate-up)
+;;("C-M-n" . md-duplicate-down)))
+;; ("M-n" . md-move-lines-down)
+
 ;;;
 
 ;;; Auto compile elisp packages
 (use-package auto-compile
   :hook elisp-mode-hook
   :demand t
-  :custom
-  (auto-compile-display-buffer nil)
+  :custom (auto-compile-display-buffer nil)
   (auto-compile-mode-line-counter t)
   (auto-compile-source-recreate-deletes-dest t)
   (auto-compile-toggle-deletes-nonlib-dest t)
   (auto-compile-update-autoloads t)
-  :config
-  (auto-compile-on-load-mode t)
+  :config (auto-compile-on-load-mode t)
   (auto-compile-on-save-mode t))
 ;;;
 
 ;;; Get shell environment variables
 (use-package exec-path-from-shell
   :no-require t
-  :config
-  (when (memq window-system '(mac ns x))
-    (setq exec-path-from-shell-variables '("PATH" "MANPATH" "WORKON_HOME"))
-    (setq exec-path-from-shell-arguments nil)  ;; "-i for fish"
-    (exec-path-from-shell-initialize )))
+  :config (when (memq window-system '(mac ns x))
+            (setq exec-path-from-shell-variables '("PATH" "MANPATH" "WORKON_HOME"))
+            (setq exec-path-from-shell-arguments nil)  ;; "-i for fish"
+            (exec-path-from-shell-initialize )))
 
 
 ;;; Better than IDO
 (use-package counsel
   :no-require t
-  :config
-  (ivy-mode 1)
+  :config (ivy-mode 1)
   (setq ivy-use-virtual-buffers t)
   (setq enable-recursive-minibuffers t)
+  (setq swiper-stay-on-quit -1)
   ;; enable this if you want `swiper' to use it
   ;; (setq search-default-mode #'char-fold-to-regexp)
-  (setq counsel-grep-base-command
-        "rg -i -M 120 --no-heading --color never '%s' %s")
+  (setq counsel-grep-base-command "rg -i -M 120 --no-heading --color never '%s' %s")
   (global-set-key "\C-s" 'swiper)
   ;; (global-set-key "\C-r" 'counsel-grep-backward)
   (global-set-key (kbd "C-c r") 'ivy-resume)
@@ -300,92 +289,28 @@
          ("C-c p" . counsel-projectile-switch-project)))
 ;;;
 
-;;; Diagnostic checker on the fly
-(use-package flycheck
-  :no-require t
-  :hook (prog-mode . flycheck-mode)
-  :custom
-  (flycheck-checker-error-threshold 2000)
-  (flycheck-highlighting-mode 'lines)
-  (flycheck-indication-mode 'left-fringe)
-  (flycheck-idle-change-delay 1)
-  (flycheck-check-syntax-automatically '(mode-enabled
-                                         save
-                                         idle-change
-                                         new-line
-                                         idle-buffer-switch))
-  :init
-  (flymake-mode -1)
-  :config
-  (set-face-attribute 'flycheck-info nil
-                      :background nil
-                      :foreground "#fff"
-                      :underline t)
-  (set-face-attribute 'flycheck-warning nil
-                      :background nil
-                      :foreground "#b58900"
-                      :underline t)
-  (set-face-attribute 'flycheck-error nil
-                      :background nil
-                      :foreground "#dc322f"
-                      :underline t))
-;;;
-
-;;; Company completion framework
-(use-package company
-  :no-require t
-  :defer t
-  :init
-  (global-company-mode)
-  :custom
-  (company-idle-delay 0)
-  (company-transformers nil)
-  (company-minimum-prefix-length 3)
-  :config
-  (bind-key "C-c c" 'company-capf)
-  (bind-key "C-c d" 'company-show-doc-buffer)
-  (bind-key "C-c v" 'company-show-location)
-  (when (fboundp 'global-auto-complete-mode)
-    (global-auto-complete-mode -1)))
-
-(use-package company-dict
-  :no-require t
-  :custom
-  (company-dict-enable-fuzzy nil)
-  (company-dict-enable-yasnippet +1)
-  :config
-  (setq company-dict-dir (concat user-emacs-directory "dict"))
-  (add-to-list 'company-backends 'company-dict))
-
-(use-package company-tabnine) ;; AI completion
-;;;
-
 ;;; Project management support
 (use-package projectile
   :defer t
   :no-require t
   :after (doom-modeline)
-  :custom
-  (projectile-enable-caching t)
+  :custom (projectile-enable-caching t)
   (projectile-dynamic-mode-line t)
   (projectile-indexing-method 'alien)
   (projectile-require-project-root 't)
   (projectile-completion-system 'ivy)
   (projectile-tags-backend 'auto)
-  :config
-  (projectile-mode +1))
+  :config (projectile-mode +1))
 ;;;
 
 ;;; Snippets support
 (use-package yasnippet
   :no-require t
-  :init
-  (add-hook 'prog-mode-hook 'yas-minor-mode)
-  :config
-  (let ((snippets-dir)
-        (yasnippet-snippets-dir))
-    (setq snippets-dir (concat user-emacs-directory "snippets"))
-    (setq yas-snippet-dirs (list snippets-dir))))
+  :init (add-hook 'prog-mode-hook 'yas-minor-mode)
+  :config (let ((snippets-dir)
+                (yasnippet-snippets-dir))
+            (setq snippets-dir (concat user-emacs-directory "snippets"))
+            (setq yas-snippet-dirs (list snippets-dir))))
 
 (use-package yasnippet-snippets
   :no-require t
@@ -402,11 +327,9 @@
   :no-require t
   :commands (realgud:trepan-ni)
   :hook ((typescript-mode . (lambda ()
-                             (setq realgud:trepan-ni-command-name
-                                   "trepan-ni --require ts-node/register ")))
+                              (setq realgud:trepan-ni-command-name "trepan-ni --require ts-node/register ")))
          (js2-mode . (lambda ()
                        (setq realgud:trepan-ni-command-name "trepan-ni ")))
-
          (js2-jsx-mode . (lambda ()
                            (setq realgud:trepan-ni-command-name "trepan-ni ")))))
 ;;;
@@ -414,11 +337,9 @@
 ;;; git support
 (use-package git-gutter
   :no-require t
-  :custom
-  (git-gutter:handled-backends '(git hg bzr svn))
+  :custom (git-gutter:handled-backends '(git hg bzr svn))
   (git-gutter:hide-gutter t)
-  :config
-  (global-git-gutter-mode +1))
+  :config (global-git-gutter-mode +1))
 
 (use-package magit
   :no-require t
@@ -434,14 +355,12 @@
   :ensure-system-package (rg . ripgrep)
   :defer t
   :no-require t
-  :config
-  (rg-enable-default-bindings))
+  :config (rg-enable-default-bindings))
 
 ;;; Occur and folding
 (use-package loccur
   :no-require t
-  :bind (:map prog-mode-map
-              ("C-c o" . loccur)))
+  :bind (:map prog-mode-map ("C-c o" . loccur)))
 ;;;
 
 ;;; Rest Client
@@ -449,8 +368,7 @@
   :hook restclient-mode
   :no-require t
   :after company
-  :config
-  (add-to-list 'company-backends 'company-restclient))
+  :config (add-to-list 'company-backends 'company-restclient))
 
 (use-package restclient
   :defer t
@@ -464,8 +382,7 @@
   :hook ((js2-mode . skewer-mode)
          (css-mode . skewer-css-mode)
          (html-mode . skewer-html-mode))
-  :custom
-  (httpd-port 54322))
+  :custom (httpd-port 54322))
 ;;;
 
 ;;; Indent guide line
@@ -485,19 +402,16 @@
 (use-package rainbow-delimiters
   :no-require t
   :defer t
-  :init
-  (add-hook 'prog-mode-hook 'rainbow-delimiters-mode))
+  :init (add-hook 'prog-mode-hook 'rainbow-delimiters-mode))
 ;;;
 
 ;;; Doom-mode
 (use-package doom-modeline
   :init (doom-modeline-mode 1)
-  :custom
-  (doom-modeline-height 25)
+  :custom (doom-modeline-height 25)
   (doom-modeline-bar-width 3)
   (when (boundp 'projectile-project-root)
     (doom-modeline-project-detection 'projectile))
-
   (doom-modeline-window-width-limit fill-column)
   (doom-modeline-buffer-file-name-style 'relative-from-project)
   (doom-modeline-icon (display-graphic-p))
@@ -542,15 +456,24 @@
 
   ;; Corrects (and improves) org-mode's native fontification.
   (doom-themes-org-config)
-
   (load-theme 'doom-tomorrow-night t)
-  (set-face-attribute 'region nil :foreground "#01F" :background "#182566")
-  (set-face-attribute 'hl-line nil :background "#141414" :bold t)
-  (set-face-attribute 'show-paren-match nil :foreground "#0F0" :background "#000" :bold t)
+  (set-face-attribute 'region nil
+                      :foreground "#01F"
+                      :background "#182566")
+  (set-face-attribute 'hl-line nil
+                      :background "#141414"
+                      :bold t)
+  (set-face-attribute 'show-paren-match nil
+                      :foreground "#0F0"
+                      :background "#000"
+                      :bold t)
   (set-face-attribute 'show-paren-match-expression nil
                       :foreground "#0F0"
-                      :background "#000" :bold t)
-  (set-face-attribute 'show-paren-mismatch nil :foreground "red" :foreground "#000"))
+                      :background "#000"
+                      :bold t)
+  (set-face-attribute 'show-paren-mismatch nil
+                      :foreground "red"
+                      :foreground "#000"))
 ;;;
 
 
@@ -568,15 +491,13 @@
   :unless (display-graphic-p)
   :pin gnu
   :no-require t
-  :config
-  (xclip-mode +1))
+  :config (xclip-mode +1))
 ;;;
 
 ;;; keybindings discoverable
 (use-package which-key
   :no-require t
-  :config
-  (which-key-mode))
+  :config (which-key-mode))
 ;;;
 
 ;;; Generic code jumping
@@ -588,66 +509,64 @@
          ("M-g i" . dumb-jump-go-prompt)
          ("M-g x" . dumb-jump-go-prefer-external)
          ("M-g z" . dumb-jump-go-prefer-external-other-window))
-  :init
-  (setq dumb-jump-selector 'ivy)
+  :init (setq dumb-jump-selector 'ivy)
   (setq dumb-jump-force-searcher 'rg))
 ;;;
 
 ;;; Language server protocol
-(use-package lsp-mode
-  :no-require t
-  :commands (lsp-find-definition)
-  :custom
-  (lsp-idle-delay 1)
-  (lsp-inhibit-lsp-hooks t)
-  (lsp-auto-configure -1)
-  (lsp-eldoc-render-all nil)
-  (lsp-log-io nil)
-  (lsp-enable-folding nil)
-  (lsp-print-performance t)
-  (lsp-enable-indentation t)
-  (lsp-completion-enable t)
-  (lsp-enable-xref t)
-  (lsp-enable-snippet t)
-  (lsp-keep-workspace-alive nil)
-  (lsp-enable-completion-at-point -1)
-  (lsp-enable-on-type-formatting t)
-  (lsp-diagnostics-provider :flycheck)
-  (lsp-diagnostics-flycheck-default-level 'warning)
-  (lsp-restart 'auto-restart)
-  :init
-  (eldoc-mode)
-  (lsp-diagnostics-mode)
-  :config
-  (define-key lsp-signature-mode-map (kbd "M-n") nil)
-  (define-key lsp-signature-mode-map (kbd "M-p") nil)
-  (define-key lsp-signature-mode-map (kbd "M-a") nil)
+;; (use-package lsp-mode
+;;   :no-require t
+;;   :commands (lsp-find-definition)
+;;   :custom
+;;   (lsp-idle-delay 1)
+;;   (lsp-inhibit-lsp-hooks t)
+;;   (lsp-auto-configure -1)
+;;   (lsp-eldoc-render-all nil)
+;;   (lsp-log-io nil)
+;;   (lsp-enable-folding nil)
+;;   (lsp-print-performance t)
+;;   (lsp-enable-indentation t)
+;;   (lsp-completion-enable t)
+;;   (lsp-enable-xref t)
+;;   (lsp-enable-snippet t)
+;;   (lsp-keep-workspace-alive nil)
+;;   (lsp-enable-completion-at-point -1)
+;;   (lsp-enable-on-type-formatting t)
+;;   (lsp-diagnostics-provider :flycheck)
+;;   (lsp-diagnostics-flycheck-default-level 'warning)
+;;   (lsp-restart 'auto-restart)
+;;   :init
+;;   (eldoc-mode)
+;;   (lsp-diagnostics-mode)
+;;   :config
+;;   (define-key lsp-signature-mode-map (kbd "M-n") nil)
+;;   (define-key lsp-signature-mode-map (kbd "M-p") nil)
+;;   (define-key lsp-signature-mode-map (kbd "M-a") nil)
 
-  (define-key lsp-mode-map (kbd "M-.") #'lsp-find-definition)
-  (define-key lsp-mode-map (kbd "M-,") #'xref-pop-marker-stack)
-  (define-key lsp-mode-map (kbd "C-c ,") #'xref-pop-marker-stack)
-  (define-key lsp-mode-map (kbd "C-x 4 .") #'xref-find-definitions-other-window))
+;;   (define-key lsp-mode-map (kbd "M-.") #'lsp-find-definition)
+;;   (define-key lsp-mode-map (kbd "M-,") #'xref-pop-marker-stack)
+;;   (define-key lsp-mode-map (kbd "C-c ,") #'xref-pop-marker-stack)
+;;   (define-key lsp-mode-map (kbd "C-x 4 .") #'xref-find-definitions-other-window))
 ;;;
 
 ;;; better than built-in python-shell-send
 (use-package eval-in-repl
   :no-require t
-  :init
-  (setq eir-repl-placement 'right)
+  :init (setq eir-repl-placement 'right)
   (setq eir-ielm-eval-in-current-buffer t)
-  (add-hook 'sh-mode-hook
-            (lambda() (local-set-key (kbd "C-c C-c") 'eir-eval-in-bash)))
-  (add-hook 'js2-mode-hook
-            (lambda () (local-set-key (kbd "C-c C-c") 'eir-eval-in-javascript)))
-  (add-hook 'python-mode-hook
-            (lambda () (local-set-key (kbd "C-c C-c") 'eir-eval-in-python))))
+  (add-hook 'sh-mode-hook (lambda()
+                            (local-set-key (kbd "C-c C-c") 'eir-eval-in-bash)))
+  (add-hook 'js2-mode-hook (lambda ()
+                             (local-set-key (kbd "C-c C-c") 'eir-eval-in-javascript)))
+  (add-hook 'python-mode-hook (lambda ()
+                                (local-set-key (kbd "C-c C-c") 'eir-eval-in-python))))
+
 ;;;
 
 ;;; terminal emulator better than built-in
 (use-package multi-vterm
   :no-require t
-  :config
-  (setq vterm-always-compile-module t)
+  :config (setq vterm-always-compile-module t)
   (global-set-key (kbd "C-x t") 'multi-vterm))
 
 ;;; easy compile and run
@@ -664,16 +583,14 @@
 
 ;;; Local local environment variables
 (use-package envrc
- :config
- (envrc-global-mode))
+  :config (envrc-global-mode))
 ;;;
 
 
 ;;; Editor Config
 (use-package editorconfig
   :no-require t
-  :config
-  (editorconfig-mode 1))
+  :config (editorconfig-mode 1))
 ;;;
 ;; --- ;;
 
@@ -685,26 +602,77 @@
   :bind (("C-c SPC" . utils:toggle-invisibles)
          ("C-c k" . utils:kill-all-buffers)
          ("C-c n" . utils:new-buffer))
-  :config
-  (add-hook 'before-save-hook 'utils:smart-tabify t t))
+  :config (add-hook 'before-save-hook 'utils:smart-tabify t t))
 ;; --- ;;
+
+
+;;;
+
+;;; Company completion framework
+(use-package company
+  :no-require t
+  :defer t
+  :init (global-company-mode)
+  :custom (company-idle-delay 0)
+  (company-transformers nil)
+  (company-minimum-prefix-length 3)
+  :config (bind-key "C-c c" 'company-capf)
+  (bind-key "C-c d" 'company-show-doc-buffer)
+  (bind-key "C-c v" 'company-show-location)
+  (when (fboundp 'global-auto-complete-mode)
+    (global-auto-complete-mode -1)))
+
+(use-package company-dict
+  :no-require t
+  :custom (company-dict-enable-fuzzy nil)
+  (company-dict-enable-yasnippet +1)
+  :config (setq company-dict-dir (concat user-emacs-directory "dict"))
+  (add-to-list 'company-backends 'company-dict))
+
+(use-package company-tabnine) ;; AI completion
+;;;
+
+;; Flymake
+(use-package flymake
+  :no-require t
+  :hook (prog-mode . flymake-mode))
+;;;
+
+(use-package eglot
+  :defer t
+  :no-require t
+  :hook
+  ((js-ts-mode . eglot-ensure)
+   (tsx-ts-mode . eglot-ensure)
+   (typescript-ts-mode . eglot-ensure))
+  :bind (:map eglot-mode-map ("C-c C-r" . elglot-rename)
+              ("C-c C-?" . eldoc)))
+
+(with-eval-after-load 'eglot
+  (add-hook 'eglot-managed-mode-hook
+            (lambda ()
+              ;; Show flymake diagnostics first.
+              (setq eldoc-documentation-functions
+                    (cons #'flymake-eldoc-function
+                          (remove #'flymake-eldoc-function eldoc-documentation-functions)))
+              ;; Show all eldoc feedback.
+              (setq eldoc-documentation-strategy #'eldoc-documentation-compose))))
 
 ;; --- Programming/Markdown/Serialization Languages Settings --- ;;
 ;;; JSON/Yaml
 (use-package json-mode
   :no-require t
-  :bind (:map json-mode-map
-              ("C-c b" . json-mode-beautify)))
+  :bind (:map json-mode-map ("C-c b" . json-mode-beautify)))
 
 (use-package yaml-mode
   :no-require t)
 ;;;
 
 ;;; Elisp
+(setq-default lisp-indent-offset 2)
 (use-package elisp-slime-nav
   :no-require t
-  :config
-  (add-hook 'emacs-lisp-mode-hook 'turn-on-elisp-slime-nav-mode)
+  :config (add-hook 'emacs-lisp-mode-hook 'turn-on-elisp-slime-nav-mode)
   (add-hook 'ielm-mode-hook 'turn-on-elisp-slime-nav-mode))
 
 (use-package package-lint
@@ -716,74 +684,26 @@
 
 (use-package elisp-format
   :no-require t
-  :bind (:map emacs-lisp-mode-map
-              ("C-c b" . elisp-format-buffer)))
+  :bind (:map emacs-lisp-mode-map ("C-c b" . elisp-format-buffer)))
 
 ;;;
-
-
-;;; Go
-;; Go - lsp-mode
-;; Set up before-save hooks to format buffer and add/delete imports.
-(defun lsp-go-install-save-hooks ()
-  (add-hook 'before-save-hook #'lsp-format-buffer t t)
-  (add-hook 'before-save-hook #'lsp-organize-imports t t))
-(add-hook 'go-mode-hook #'lsp-go-install-save-hooks)
-
-;; Start LSP Mode
-(add-hook 'go-mode-hook #'lsp-deferred)
-;;;
-
-
-;;; java
-(use-package lsp-java
-  :no-require t)
-;;;
-
 
 ;;; Python
 (use-package virtualenvwrapper
   :no-require t
-  :defer t)
-
-(use-package importmagic
-  :no-require t
-  :commands importmagic-fix-imports
-  :bind (:map python-mode-map
-              ("C-c C-l" . importmagic-fix-imports)))
-
-(use-package python-black
-  :no-require t
-  :bind (:map python-mode-map
-              ("C-c b" . python-black-buffer)))
-
-(use-package pytest
-  :no-require t
-  :init
-  (add-hook 'python-mode-hook
-            (lambda () (define-key python-mode-map (kbd "C-c C-t") 'pytest-pdb-one)))
-  :config
-  ;; hacking for suppress Symbol’s value void variable
-  (setq python-shell--interpreter (executable-find "ipython"))
-  (setq python-shell--interpreter-args "-i --simple-prompt")
-  :custom
-  (pytest-project-root-files '(".projectile" "pyproject.toml" ".dir-locals.el"))
-  (pytest-cmd-format-string "cd '%s' ; and %s %s '%s'"))
+  :defer t
+  :ensure t)
 
 (use-package python
-  :no-require t
-  :hook ((python-mode . (lambda () (python:setup))))
-  :commands (python-indent-shift-left python-indent-shift-right)
-  :bind (:map python-mode-map
-              ("<tab>" . python-indent-shift-right)
-              ("<backtab>" . python-indent-shift-left)
-              ("C-c C-p" . run-python))
+  :hook
+  (python-mode . python-ts-mode)
+  (python-ts-mode . python:setup)
   :custom
   (python-shell-completion-native-enable t)
   (python-indent-offset 4)
   (python-indent-guess-indent-offset nil)
-  (python-indent-guess-indent-offset-verbose nil)
   :config
+  (defcustom python:virtualenv-name nil "virtualenv name." :type 'string :group 'python)
   (defun python:--ask-create-virtual-env ()
     "Create virtual env"
     (if (y-or-n-p "Do you want to create virtualenv?")
@@ -795,36 +715,34 @@
     (utils:replace-string-in-file dir-locals-file
                                   "{{ VENV-NAME }}" venv-current-name))
 
-  (defun python:lsp-add-extra-path (extra-path)
-    "Add extra path locations to jedi workspace.  EXTRA-PATH."
-    (setq lsp-jedi-workspace-extra-paths extra-path))
-
   (defun python:setup ()
     "Function that setups 'python-mode'."
+    (message "Hacking local variables!!!")
     (hack-local-variables)
-    (setq flycheck-python-pycompile-executable "python3")
-    (setq flycheck-enabled-checkers '(python-pycompile))
+    (when python:virtualenv-name
+      (venv-workon python:virtualenv-name))
+    (setq-default eglot-workspace-configuration '((:pylsp . (:configurationSources ["flake8"]
+                                                              :plugins (:jedi_completion (:fuzzy t)
+                                                                         :pycodestyle (:enabled :json-false)
+                                                                         :mccabe (:enabled :json-false)
+                                                                         :pyflakes (:enabled :json-false)
+                                                                         :pylint (:enabled :json-false)
+                                                                         :flake8 (:enabled :json-false :maxLineLength 88)
+                                                                         :ruff (:enabled t :lineLength 88)
+                                                                         :pydocstyle (:enabled t :convention "numpy")
+                                                               :yapf (:enabled :json-false)
+                                                               :autopep8 (:enabled :json-false)
+                                                               :black (:enabled t :line_length 88  :cache_config t))))))
+
+    (eglot-ensure)
+    (let ((project-root))
+      (projectile-mode +1)
+      (with-eval-after-load "projectile"
+        (setq project-root (projectile-project-root))))
+
     (if (executable-find "ipython")
         (setq python-shell-interpreter (executable-find "ipython"))
-      (setq python-shell-interpreter-args "-i --simple-prompt"))
-
-    (when (executable-find "jedi-language-server")
-      (lsp)
-      ;;(lsp-diagnostics-flycheck-enable t)
-      (lsp-diagnostics--disable)
-      ;; (setq flycheck-disabled-checkers '(python-mypy))
-      (setq flycheck-enabled-checkers '(python-pycompile
-                                        python-pylint
-                                        python-flake8))
-
-      (flycheck-mode +1)
-
-      (setq-local flycheck-checker 'python-flake8)
-      (setq-local flycheck-python-flake8-executable (executable-find "flake8"))
-      (let ((project-root))
-        (projectile-mode +1)
-        (with-eval-after-load "projectile"
-          (setq project-root (projectile-project-root))))))
+      (setq python-shell-interpreter-args "-i --simple-prompt")))
 
   (defun python:init ()
     "Initialize project conf for 'python-mode'."
@@ -832,85 +750,120 @@
     (let ((dir-locals-file) (project-root))
       (with-eval-after-load "projectile"
         (setq project-root (projectile-project-root))
-        (message project-root)
         (setq dir-locals-file (concat project-root ".dir-locals.el"))
-        (unless (file-exists-p dir-locals-file)
-          (python:--ask-create-virtual-env)
-          (utils:generate-project-files "python")
-          (python:--replace-template-variables dir-locals-file))
+        (python:--ask-create-virtual-env)
+        (utils:generate-project-files "python")
+        (python:--replace-template-variables dir-locals-file)
         (python:setup)))))
 
-(use-package lsp-jedi
+(use-package importmagic
+  :no-require t
+  :commands importmagic-fix-imports
+  :bind (:map python-mode-map
+          ("C-c C-l" . importmagic-fix-imports)))
+
+(use-package python-black
+  :no-require t
+  :bind (:map python-mode-map
+          ("C-c b" . python-black-buffer)))
+
+(use-package pytest
+  :no-require t
+  :init
+  (add-hook 'python-mode-hook
+    (lambda () (define-key python-mode-map (kbd "C-c C-t") 'pytest-pdb-one)))
   :config
-  (with-eval-after-load "lsp-mode"
-    (add-to-list 'lsp-disabled-clients 'pyls)
-    (add-to-list 'lsp-enabled-clients 'jedi)))
+    ;; hacking for suppress Symbol’s value void variable
+  (setq python-shell--interpreter (executable-find "ipython"))
+  (setq python-shell--interpreter-args "-i --simple-prompt")
+  :custom
+  (pytest-project-root-files '(".projectile" "pyproject.toml" ".dir-locals.el"))
+  (pytest-cmd-format-string "cd '%s' ; and %s %s '%s'"))
 
 (use-package ein) ;; python-notebook
 ;;;
 
-;;; Javascript/Typescript
-(use-package js-comint
-  :no-require t
-  :bind (:map js2-mode-map
-              ("C-c C-e" . 'js-send-last-sexp)
-              ("C-c C-b" . 'js-send-buffer)
-              ("C-c C-g" . 'js-send-buffer-and-go))
-  :config
-  (setq js-comint-program-command "node")
-  (setq js-comint-program-arguments '("--interactive"))
-  (defun inferior-js-mode-hook-setup ()
-    (add-hook 'comint-output-filter-functions 'js-comint-process-output))
-  (add-hook 'inferior-js-mode-hook 'inferior-js-mode-hook-setup t))
 
-(use-package ts-comint
-  :no-require t
-  :bind (:map typescript-mode-map
-              ("C-c C-e" . 'ts-send-last-sexp)
-              ("C-c C-b" . 'ts-send-buffer)
-              ("C-c C-g" . 'ts-send-buffer-and-go)))
+;;; Go
+  ;; Go - lsp-mode
+  ;; Set up before-save hooks to format buffer and add/delete imports.
+  ;; (defun lsp-go-install-save-hooks ()
+  ;;   (add-hook 'before-save-hook #'lsp-format-buffer t t)
+  ;;   (add-hook 'before-save-hook #'lsp-organize-imports t t))
+  ;; (add-hook 'go-mode-hook #'lsp-go-install-save-hooks)
 
-(use-package add-node-modules-path
-  :no-require t
-  :hook ((js2-jsx-mode . add-node-modules-path)
-         (js2-mode . add-node-modules-path)
-         (typescript-mode . add-node-modules-path)))
-
-(use-package jest-test-mode
-  :no-require t
-  :bind (:map js2-mode-map ("C-c C-t" . 'jest-test-debug-run-at-point)
-         :map typescript-mode-map ("C-c C-t" . 'jest-test-debug-run-at-point)))
-
-(use-package js2-mode
-  :no-require t
-  :mode ("\\.js$" . js2-mode)
-  :interpreter "node"
-  :hook (js2-mode . lsp)
-  :config
-  (setq flycheck-disabled-checkers '(javascript-jshint))
-  (setq flycheck-enabled-checkers
-        '(javascript-eslint javascript-standard)))
-
-(use-package jtsx
-  :mode (("\\.jsx?\\'" . jtsx-jsx-mode)
-         ("\\.tsx\\'" . jtsx-tsx-mode)
-         ("\\.ts\\'" . jtsx-typescript-mode))
-  :commands jtsx-install-treesit-language
-  :hook ((jtsx-jsx-mode . hs-minor-mode)
-         (jtsx-tsx-mode . hs-minor-mode)
-         (jtsx-typescript-mode . hs-minor-mode)))
-
-(use-package typescript-mode
-  :no-require t
-  :mode ((("\\.tsx$" . typescript-mode) ("\\.ts$" . typescript-mode)))
-  :hook (typescript-mode . lsp)
-  :custom
-  (typescript-indent-level 2)
-  :config
-  (setq flycheck-disabled-checkers '(javascript-jshint))
-  (setq flycheck-enabled-checkers
-        '(javascript-eslint)))
+  ;; ;; Start LSP Mode
+  ;; (add-hook 'go-mode-hook #'lsp-deferred)
 ;;;
+
+
+;;; java
+  ;; (use-package lsp-java
+  ;;   :no-require t)
+;;;
+
+;;; Javascript/Typescript
+  ;; (use-package js-comint
+  ;;   :no-require t
+  ;;   :bind (:map js2-mode-map
+  ;;               ("C-c C-e" . 'js-send-last-sexp)
+  ;;               ("C-c C-b" . 'js-send-buffer)
+  ;;               ("C-c C-g" . 'js-send-buffer-and-go))
+  ;;   :config
+  ;;   (setq js-comint-program-command "node")
+  ;;   (setq js-comint-program-arguments '("--interactive"))
+  ;;   (defun inferior-js-mode-hook-setup ()
+  ;;     (add-hook 'comint-output-filter-functions 'js-comint-process-output))
+  ;;   (add-hook 'inferior-js-mode-hook 'inferior-js-mode-hook-setup t))
+
+  ;; (use-package ts-comint
+  ;;   :no-require t
+  ;;   :bind (:map typescript-mode-map
+  ;;               ("C-c C-e" . 'ts-send-last-sexp)
+  ;;               ("C-c C-b" . 'ts-send-buffer)
+  ;;               ("C-c C-g" . 'ts-send-buffer-and-go)))
+
+  ;; (use-package add-node-modules-path
+  ;;   :no-require t
+  ;;   :hook ((js2-jsx-mode . add-node-modules-path)
+  ;;          (js2-mode . add-node-modules-path)
+  ;;          (typescript-mode . add-node-modules-path)))
+
+  ;; (use-package jest-test-mode
+  ;;   :no-require t
+  ;;   :bind (:map js2-mode-map ("C-c C-t" . 'jest-test-debug-run-at-point)
+  ;;          :map typescript-mode-map ("C-c C-t" . 'jest-test-debug-run-at-point)))
+
+  ;; (use-package js2-mode
+  ;;   :no-require t
+  ;;   :mode ("\\.js$" . js2-mode)
+  ;;   :interpreter "node"
+  ;;   :hook (js2-mode . lsp)
+  ;;   :config
+  ;;   (setq flycheck-disabled-checkers '(javascript-jshint))
+  ;;   (setq flycheck-enabled-checkers
+  ;;         '(javascript-eslint javascript-standard)))
+
+  ;; (use-package jtsx
+  ;;   :mode (("\\.jsx?\\'" . jtsx-jsx-mode)
+  ;;          ("\\.tsx\\'" . jtsx-tsx-mode)
+  ;;          ("\\.ts\\'" . jtsx-typescript-mode))
+  ;;   :commands jtsx-install-treesit-language
+  ;;   :hook ((jtsx-jsx-mode . hs-minor-mode)
+  ;;          (jtsx-tsx-mode . hs-minor-mode)
+  ;;          (jtsx-typescript-mode . hs-minor-mode)))
+
+  ;; (use-package typescript-mode
+  ;;   :no-require t
+  ;;   :mode ((("\\.tsx$" . typescript-mode) ("\\.ts$" . typescript-mode)))
+  ;;   :hook (typescript-mode . lsp)
+  ;;   :custom
+  ;;   (typescript-indent-level 2)
+  ;;   :config
+  ;;   (setq flycheck-disabled-checkers '(javascript-jshint))
+  ;;   (setq flycheck-enabled-checkers
+  ;;         '(javascript-eslint)))
+  ;; ;;;
 
 ;;; Bash/Shell Scripting
 (use-package company-shell
@@ -922,34 +875,20 @@
 
 (use-package sh-script
   :no-require t
-  :custom
-  (setq flycheck-enabled-checkers '(sh-shellcheck))
-  ;; (setq flycheck-shellcheck-follow-sources nil)
+  :config
   (sh-basic-offset 4))
 ;;;
 
-;;; C/C++
-(use-package flycheck-clang-tidy
-  :no-require t
-  :after (cc-mode flycheck)
-  :config
-  (add-hook 'flycheck-mode-hook 'flycheck-clang-tidy-setup)
-  (setq-default flycheck-c/c++-clang-tidy-executable "clang-tidy-9"))
-
+;; ;;; C/C++
 (use-package cc-mode
   :no-require t
-  :hook ((c-mode . lsp) (c++-mode . lsp))
   :custom
   (c-default-style "linux")
   (c-basic-offset 4)
   (c-tab-always-indent t)
   :config
-  (setq company-clang-executable "clang-9")
-  (setq lsp-clients-clangd-executable "clangd-9")
-  (add-to-list 'lsp-enabled-clients 'clangd)
-  (setq flycheck-enabled-checkers '(c/c++-clang c/c++-cppcheck c/c++-gcc)))
-
-;;;
+  (eglot-ensure))
+;; ;;;
 
 ;;; Make
 (use-package make-mode
@@ -960,49 +899,46 @@
   :no-require t
   :commands (markdown-mode gfm-mode)
   :mode (("README\\.md\\'" . gfm-mode)
-         ("\\.md\\'" . markdown-mode)
-         ("\\.markdown\\'" . markdown-mode))
-  :bind (:map markdown-mode-map
-              ("C-c C-c l" . markdown-live-preview-mode)))
+          ("\\.md\\'" . markdown-mode)
+          ("\\.markdown\\'" . markdown-mode))
+  :bind (:map markdown-mode-map ("C-c C-c l" . markdown-live-preview-mode)))
 ;;;
 
 ;;; Rust
-(use-package flycheck-rust
-  :no-require t
-  :after (rustic flycheck)
-  ;; :after (rust-mode flycheck)
-  :config
-  ;; (add-hook 'flycheck-mode-hook #'flycheck-rust-setup))
-  (add-hook 'flycheck-mode-hook #'flycheck-rust-setup)
-  (push 'rustic-clippy flycheck-checkers))
+  ;; (use-package flycheck-rust
+  ;;   :no-require t
+  ;;   :after (rustic flycheck)
+  ;;   ;; :after (rust-mode flycheck)
+  ;;   :config
+  ;;   ;; (add-hook 'flycheck-mode-hook #'flycheck-rust-setup))
+  ;;   (add-hook 'flycheck-mode-hook #'flycheck-rust-setup)
+  ;;   (push 'rustic-clippy flycheck-checkers))
 
-(use-package rustic
-  :no-require t
-  :hook (rust-mode . lsp)
-  :custom
-  (rust-indent-offset 4)
-  :config
-  ;; (push 'rustic-clippy flycheck-checkers))
-  (add-to-list 'lsp-enabled-clients 'rust-analyzer)
-  ;;(setq lsp-rust-server 'rust-analyzer)
-  (setq rustic-lsp-server 'rust-analyzer))
+  ;; (use-package rustic
+  ;;   :no-require t
+  ;;   :hook (rust-mode . lsp)
+  ;;   :custom
+  ;;   (rust-indent-offset 4)
+  ;;   :config
+  ;;   ;; (push 'rustic-clippy flycheck-checkers))
+  ;;   (add-to-list 'lsp-enabled-clients 'rust-analyzer)
+  ;;   ;;(setq lsp-rust-server 'rust-analyzer)
+  ;;   (setq rustic-lsp-server 'rust-analyzer))
 
-(use-package cargo-mode
-  :config
-  (setq compilation-scroll-output t)
-  (add-hook 'rust-mode-hook 'cargo-minor-mode))
+  ;; (use-package cargo-mode
+  ;;   :config
+  ;;   (setq compilation-scroll-output t)
+  ;;   (add-hook 'rust-mode-hook 'cargo-minor-mode))
 ;;;
 
 ;;; Ruby
 (use-package ruby-mode
   :no-require t
-  :hook (ruby-mode . lsp)
   :custom
   (ruby-indent-level 2)
   (ruby-indent-tabs nil)
-  :init
-  (with-eval-after-load "lsp-clients"
-    (setq lsp-solargraph-use-bundler t)))
+  :config
+  (eglot-ensure))
 ;;;
 
 ;;; SQL
@@ -1013,8 +949,7 @@
 ;;; Assembly x86
 (use-package nasm-mode
   :no-require t
-  :custom
-  (nasm-basic-offset 4))
+  :custom (nasm-basic-offset 4))
 ;;;
 
 ;;; Fish shell
@@ -1027,24 +962,21 @@
   :hook terraform-mode
   :no-require t
   :after company
-  :config
-  (company-terraform-init))
+  :config (company-terraform-init))
 
 (use-package terraform-mode
   :no-require t
-  :custom
-  (terraform-indent-level 2))
+  :custom (terraform-indent-level 2))
 ;;;
 
 ;;; Web
 (use-package web-mode
   :no-require t
   :mode (("\\.css?\\'" . web-mode)
-         ("\\.html?\\'" . web-mode)
-         ("\\.djhtml\\'" . web-mode)
-         ("\\.jinja2\\'" . web-mode))
-  :custom
-  (web-mode-markup-indent-offset 2)
+          ("\\.html?\\'" . web-mode)
+          ("\\.djhtml\\'" . web-mode)
+          ("\\.jinja2\\'" . web-mode))
+  :custom (web-mode-markup-indent-offset 2)
   (web-mode-css-indent-offset 2)
   (web-mode-code-indent-offset 2)
   (web-mode-enable-auto-pairing t)
@@ -1063,10 +995,8 @@
   :no-require t
   :after company
   :hook ((tex-mode . company-math-mode)
-         (TeX-mode . company-math-mode))
-  :init
-  (add-to-list 'company-backends '(company-math-symbols-latex
-                                   company-latex-commands)))
+          (TeX-mode . company-math-mode))
+  :init (add-to-list 'company-backends '(company-math-symbols-latex company-latex-commands)))
 
 (use-package latex-preview-pane
   :defer t

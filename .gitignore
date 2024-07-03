@@ -46,3 +46,8 @@ recentf
 # vterm files
 session.*
 .terminfo
+
+
+# others
+places
+tree-sitter
