@@ -757,12 +757,29 @@
 ;;;
 
 ;;; Javascript/Typescript
+(defun js-ts-bootstrap ()
+  "Init javascript/typescript configuration."
+  ;; I'm not sure why this is needed, but it throws an error if I remove it
+  (cl-defmethod project-root ((project (head eglot-project)))
+    (cdr project))
+
+  (defun my-project-try-tsconfig-json (dir)
+    (when-let* ((found (locate-dominating-file dir "tsconfig.json")))
+      (cons 'eglot-project found)))
+
+  (add-hook 'project-find-functions
+    'my-project-try-tsconfig-json nil nil)
+
+  (add-to-list 'eglot-server-programs
+    '((typescript-mode) "typescript-language-server" "--stdio"))
+  (eglot-ensure))
+
 (use-package typescript-mode
-  :hook ((js-ts-mode . eglot-ensure)
-         (typescript-mode . eglot-ensure)
-         (typescript-ts-mode . eglot-ensure)
-         (typescriptreact-mode . eglot-ensure)
-         (tsx-ts-mode . eglot-ensure))
+  :hook ((js-ts-mode . js-ts-bootstrap)
+         (typescript-mode . js-ts-bootstrap)
+         (typescript-ts-mode . js-ts-bootstrap)
+         (typescriptreact-mode . js-ts-bootstrap)
+         (tsx-ts-mode . js-ts-bootstrap))
   :mode (("\\.ts\\'" . typescript-mode)
          ("\\.tsx\\'" . typescriptreact-mode)))
 
@@ -770,8 +787,8 @@
   :no-require t
   :mode ("\\.js$" . js2-mode)
   :interpreter "node"
-  :hook ((js2-mode . eglot-ensure)
-         (js-ts-mode . eglot-ensure)))
+  :hook ((js2-mode . js-ts-bootstrap)
+         (js-ts-mode . js-ts-bootstrap)))
 
 (use-package jtsx
   :mode (("\\.jsx?\\'" . jtsx-jsx-mode)
