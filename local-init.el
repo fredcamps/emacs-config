@@ -410,6 +410,7 @@
   (doom-modeline-window-width-limit fill-column)
   (doom-modeline-buffer-file-name-style 'relative-from-project)
   (doom-modeline-icon (display-graphic-p))
+  (doom-modeline-check-icon t)
   (doom-modeline-major-mode-icon t)
   (doom-modeline-major-mode-color-icon t)
   (doom-modeline-buffer-state-icon t)
@@ -421,8 +422,11 @@
   (doom-modeline-buffer-encoding t)
   (doom-modeline-indent-info t)
   (doom-modeline-checker-simple-format t)
+  (doom-modeline-vcs-icon t)
   (doom-modeline-vcs-max-length 12)
   (doom-modeline-persp-icon t)
+  (doom-modeline-workspace-name t)
+  (doom-modeline-env-version t)
   (doom-modeline-lsp t)
   (doom-modeline-modal-icon t)
   (doom-modeline-gnus t)
@@ -510,42 +514,6 @@
   (setq dumb-jump-force-searcher 'rg))
 ;;;
 
-;;; Language server protocol
-;; (use-package lsp-mode
-;;   :no-require t
-;;   :commands (lsp-find-definition)
-;;   :custom
-;;   (lsp-idle-delay 1)
-;;   (lsp-inhibit-lsp-hooks t)
-;;   (lsp-auto-configure -1)
-;;   (lsp-eldoc-render-all nil)
-;;   (lsp-log-io nil)
-;;   (lsp-enable-folding nil)
-;;   (lsp-print-performance t)
-;;   (lsp-enable-indentation t)
-;;   (lsp-completion-enable t)
-;;   (lsp-enable-xref t)
-;;   (lsp-enable-snippet t)
-;;   (lsp-keep-workspace-alive nil)
-;;   (lsp-enable-completion-at-point -1)
-;;   (lsp-enable-on-type-formatting t)
-;;   (lsp-diagnostics-provider :flycheck)
-;;   (lsp-diagnostics-flycheck-default-level 'warning)
-;;   (lsp-restart 'auto-restart)
-;;   :init
-;;   (eldoc-mode)
-;;   (lsp-diagnostics-mode)
-;;   :config
-;;   (define-key lsp-signature-mode-map (kbd "M-n") nil)
-;;   (define-key lsp-signature-mode-map (kbd "M-p") nil)
-;;   (define-key lsp-signature-mode-map (kbd "M-a") nil)
-
-;;   (define-key lsp-mode-map (kbd "M-.") #'lsp-find-definition)
-;;   (define-key lsp-mode-map (kbd "M-,") #'xref-pop-marker-stack)
-;;   (define-key lsp-mode-map (kbd "C-c ,") #'xref-pop-marker-stack)
-;;   (define-key lsp-mode-map (kbd "C-x 4 .") #'xref-find-definitions-other-window))
-;;;
-
 ;;; better than built-in python-shell-send
 (use-package eval-in-repl
   :no-require t
@@ -557,7 +525,6 @@
                              (local-set-key (kbd "C-c C-c") 'eir-eval-in-javascript)))
   (add-hook 'python-mode-hook (lambda ()
                                 (local-set-key (kbd "C-c C-c") 'eir-eval-in-python))))
-
 ;;;
 
 ;;; terminal emulator better than built-in
@@ -565,6 +532,7 @@
   :no-require t
   :config (setq vterm-always-compile-module t)
   (global-set-key (kbd "C-x t") 'multi-vterm))
+;;;
 
 ;;; easy compile and run
 (use-package quickrun
@@ -601,8 +569,6 @@
          ("C-c n" . utils:new-buffer))
   :config (add-hook 'before-save-hook 'utils:smart-tabify t t))
 ;; --- ;;
-
-
 ;;;
 
 ;;; Company completion framework
@@ -638,10 +604,6 @@
 (use-package eglot
   :defer t
   :no-require t
-  :hook
-  ((js-ts-mode . eglot-ensure)
-   (tsx-ts-mode . eglot-ensure)
-   (typescript-ts-mode . eglot-ensure))
   :bind (:map eglot-mode-map ("C-c C-r" . elglot-rename)
               ("C-c C-?" . eldoc)))
 
@@ -795,67 +757,61 @@
 ;;;
 
 ;;; Javascript/Typescript
-  ;; (use-package js-comint
-  ;;   :no-require t
-  ;;   :bind (:map js2-mode-map
-  ;;               ("C-c C-e" . 'js-send-last-sexp)
-  ;;               ("C-c C-b" . 'js-send-buffer)
-  ;;               ("C-c C-g" . 'js-send-buffer-and-go))
-  ;;   :config
-  ;;   (setq js-comint-program-command "node")
-  ;;   (setq js-comint-program-arguments '("--interactive"))
-  ;;   (defun inferior-js-mode-hook-setup ()
-  ;;     (add-hook 'comint-output-filter-functions 'js-comint-process-output))
-  ;;   (add-hook 'inferior-js-mode-hook 'inferior-js-mode-hook-setup t))
+(use-package typescript-mode
+  :hook ((js-ts-mode . eglot-ensure)
+         (typescript-mode . eglot-ensure)
+         (typescript-ts-mode . eglot-ensure)
+         (typescriptreact-mode . eglot-ensure)
+         (tsx-ts-mode . eglot-ensure))
+  :mode (("\\.ts\\'" . typescript-mode)
+         ("\\.tsx\\'" . typescriptreact-mode)))
 
-  ;; (use-package ts-comint
-  ;;   :no-require t
-  ;;   :bind (:map typescript-mode-map
-  ;;               ("C-c C-e" . 'ts-send-last-sexp)
-  ;;               ("C-c C-b" . 'ts-send-buffer)
-  ;;               ("C-c C-g" . 'ts-send-buffer-and-go)))
+(use-package js2-mode
+  :no-require t
+  :mode ("\\.js$" . js2-mode)
+  :interpreter "node"
+  :hook ((js2-mode . eglot-ensure)
+         (js-ts-mode . eglot-ensure)))
 
-  ;; (use-package add-node-modules-path
-  ;;   :no-require t
-  ;;   :hook ((js2-jsx-mode . add-node-modules-path)
-  ;;          (js2-mode . add-node-modules-path)
-  ;;          (typescript-mode . add-node-modules-path)))
+(use-package jtsx
+  :mode (("\\.jsx?\\'" . jtsx-jsx-mode)
+          ("\\.tsx\\'" . jtsx-tsx-mode)
+          ("\\.ts\\'" . jtsx-typescript-mode))
+  :commands jtsx-install-treesit-language
+  :hook ((jtsx-jsx-mode . hs-minor-mode)
+          (jtsx-tsx-mode . hs-minor-mode)
+          (jtsx-typescript-mode . hs-minor-mode)))
 
-  ;; (use-package jest-test-mode
-  ;;   :no-require t
-  ;;   :bind (:map js2-mode-map ("C-c C-t" . 'jest-test-debug-run-at-point)
-  ;;          :map typescript-mode-map ("C-c C-t" . 'jest-test-debug-run-at-point)))
+(use-package js-comint
+  :no-require t
+  :bind (:map js2-mode-map
+          ("C-c C-e" . 'js-send-last-sexp)
+          ("C-c C-b" . 'js-send-buffer)
+          ("C-c C-g" . 'js-send-buffer-and-go))
+  :config
+  (setq js-comint-program-command "node")
+  (setq js-comint-program-arguments '("--interactive"))
+  (defun inferior-js-mode-hook-setup ()
+    (add-hook 'comint-output-filter-functions 'js-comint-process-output))
+  (add-hook 'inferior-js-mode-hook 'inferior-js-mode-hook-setup t))
 
-  ;; (use-package js2-mode
-  ;;   :no-require t
-  ;;   :mode ("\\.js$" . js2-mode)
-  ;;   :interpreter "node"
-  ;;   :hook (js2-mode . lsp)
-  ;;   :config
-  ;;   (setq flycheck-disabled-checkers '(javascript-jshint))
-  ;;   (setq flycheck-enabled-checkers
-  ;;         '(javascript-eslint javascript-standard)))
+(use-package ts-comint
+  :no-require t
+  :bind (:map typescript-mode-map
+          ("C-c C-e" . 'ts-send-last-sexp)
+          ("C-c C-b" . 'ts-send-buffer)
+          ("C-c C-g" . 'ts-send-buffer-and-go)))
 
-  ;; (use-package jtsx
-  ;;   :mode (("\\.jsx?\\'" . jtsx-jsx-mode)
-  ;;          ("\\.tsx\\'" . jtsx-tsx-mode)
-  ;;          ("\\.ts\\'" . jtsx-typescript-mode))
-  ;;   :commands jtsx-install-treesit-language
-  ;;   :hook ((jtsx-jsx-mode . hs-minor-mode)
-  ;;          (jtsx-tsx-mode . hs-minor-mode)
-  ;;          (jtsx-typescript-mode . hs-minor-mode)))
+(use-package add-node-modules-path
+  :no-require t
+  :hook ((js2-jsx-mode . add-node-modules-path)
+         (js2-mode . add-node-modules-path)
+         (typescript-mode . add-node-modules-path)))
 
-  ;; (use-package typescript-mode
-  ;;   :no-require t
-  ;;   :mode ((("\\.tsx$" . typescript-mode) ("\\.ts$" . typescript-mode)))
-  ;;   :hook (typescript-mode . lsp)
-  ;;   :custom
-  ;;   (typescript-indent-level 2)
-  ;;   :config
-  ;;   (setq flycheck-disabled-checkers '(javascript-jshint))
-  ;;   (setq flycheck-enabled-checkers
-  ;;         '(javascript-eslint)))
-  ;; ;;;
+(use-package jest-test-mode
+  :no-require t
+  :bind (:map js2-mode-map ("C-c C-t" . 'jest-test-debug-run-at-point)
+         :map typescript-mode-map ("C-c C-t" . 'jest-test-debug-run-at-point)))
 
 ;;; Bash/Shell Scripting
 (use-package company-shell
