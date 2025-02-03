@@ -43,8 +43,6 @@
     (init:setup-repository)
     (package-install 'use-package)
     (require 'use-package))
-  (unless (package-installed-p 'use-package-ensure-system-package)
-    (init:setup-repository))
   ;; (setq use-package-always-pin "melpa")
   (require 'use-package-ensure)
   (setq use-package-always-ensure t))
@@ -196,7 +194,6 @@
 ;; --- ;;
 
 ;; --- Extensions settings --- ;;
-(use-package use-package-ensure-system-package)
 
 ;;; Profile Emacs startup
 (use-package esup
